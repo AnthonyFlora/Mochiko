@@ -159,26 +159,58 @@ class Application(Processor):
     def on_message_executor_finished(self, topic, message):
         self.log('Application Finished: %s' % (message))
 
-class TcpStreamer(Thread):
+
+class SensorReceiver(Thread):
     def __init__(self, processor, connection):
         Thread.__init__(self)
         self.processor = processor
         self.connection = connection
 
     def run(self):
-        log('Streamer for connection %s started..' % (self.connection))
-        self.processor.enqueue('streamer_running', None)
-        while True:
-            self.connection.send('w')
-            data = self.connection.recv(1024)
-            if data == '':
-                break
-            self.processor.enqueue('streamer_data', data.strip())
-            sleep(5)
+        self.processor.enqueue('receiver_running', None)
+        try:
+            while True:
+                self.connection.send('w')
+                data = self.connection.recv(1024)
+                if data == '':
+                    break
+                self.processor.enqueue('receiver_data', data.strip())
+                sleep(5)
+        except:
+            None
+        self.processor.enqueue('receiver_finished', None)
 
-        self.processor.enqueue('streamer_finished', None)
-        log('Streamer for connection %s finished..' % (self.connection))
 
+class SensorController(Processor):
+    def __init__(self, name, connection, address):
+        Processor.__init__(self, name)
+        self.connection = connection
+        self.address = address
+        self.set_handler('receiver_running', self.on_message_receiver_running)
+        self.set_handler('receiver_data', self.on_message_receiver_data)
+        self.set_handler('receiver_finished', self.on_message_receiver_finished)
+
+    def on_startup(self):
+        Processor.on_startup(self)
+        log('startup')
+        log(self.address)
+        self.log('Starting receiver: %s:%s' % (self.address))
+        self.receiver = SensorReceiver(self, self.connection)
+        self.receiver.start()
+        self.log('Started receiver: %s:%s' % (self.address))
+
+    def on_shutdown(self):
+        Processor.on_shutdown(self)
+        self.connection.close()
+
+    def on_message_receiver_running(self, topic, message):
+        self.log('Receiver Running')
+
+    def on_message_receiver_data(self, topic, message):
+        self.log('Receiver Data: %s' % (message))
+
+    def on_message_receiver_finished(self, topic, message):
+        self.log('Receiver Finished: %s' % (message))
 
 
 class TcpListener(Thread):
@@ -197,14 +229,12 @@ class TcpListener(Thread):
             self.processor.enqueue('tcp_connection', (conn, addr))
 
 
-
 class TcpServer(Processor):
     def __init__(self, name, port, tcp_handler):
         Processor.__init__(self, name)
         self.port = port
         self.tcp_handler = tcp_handler
         self.set_handler('tcp_connection', self.on_message_tcp_connection)
-        self.set_handler('streamer_data', self.on_message_streamer_data)
 
     def on_startup(self):
         Processor.on_startup(self)
@@ -215,11 +245,7 @@ class TcpServer(Processor):
 
     def on_message_tcp_connection(self, topic, message):
         conn, addr = message
-        TcpStreamer(self, conn).start()
-
-    def on_message_streamer_data(self, topic, message):
-        self.log('Streamer Data: %s' % (message))
-
+        SensorController('SensorController_%s:%s' % addr, conn, addr).start()
 
 
 class ButtonUpdater(Processor):
