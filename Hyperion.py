@@ -12,7 +12,6 @@ import shlex
 
 # -- State -------------------------------------------------------------------------------------------------------------
 
-running = False
 subscriptions = defaultdict(lambda: [])
 messages = Queue()
 gui_callbacks = Queue()
@@ -37,16 +36,17 @@ def unsubscribe(topic, subscriber):
 
 def publish(topic, message):
     global messages
-    global running
     global subscriptions
     subscribers = subscriptions[topic]
     for subscriber in subscribers:
         subscriber.enqueue(topic, message)
 
 
-def stop():
-    global running
-    running = False
+def shutdown():
+    log('Shutting down...')
+    publish('shutdown', None)
+    sleep(5)
+    publish('shutdown_logger', None)
 
 # -- Interfaces --------------------------------------------------------------------------------------------------------
 
@@ -89,7 +89,6 @@ class Processor(Thread):
                 self.log('Unhandled topic %s' % topic)
         self.on_shutdown()
 
-
     def log(self, text):
         publish('log', '%s - %s' % (self.name, text))
 
@@ -98,12 +97,19 @@ class Logger(Processor):
     def __init__(self):
         Processor.__init__(self, 'Logger')
         self.set_handler('log', self.on_message_log)
+        self.set_handler('shutdown_logger', self.on_message_shutdown_logger)
 
     def on_message_log(self, topic, message):
         log(message)
 
     def log(self, text):
         log('*** %s - %s' % (self.name, text))
+
+    def on_message_shutdown(self, topic, message):
+        None
+
+    def on_message_shutdown_logger(self, topic, message):
+        self.running = False
 
 
 class Executor(Thread):
@@ -175,7 +181,7 @@ class SensorReceiver(Thread):
                 if data == '':
                     break
                 self.processor.enqueue('receiver_data', data.strip())
-                sleep(5)
+                sleep(1)
         except:
             None
         self.processor.enqueue('receiver_finished', None)
@@ -202,6 +208,7 @@ class SensorController(Processor):
     def on_shutdown(self):
         Processor.on_shutdown(self)
         self.connection.close()
+        self.log('Shutting down')
 
     def on_message_receiver_running(self, topic, message):
         self.log('Receiver Running')
@@ -218,15 +225,26 @@ class TcpListener(Thread):
         Thread.__init__(self)
         self.processor = processor
         self.port = port
+        self.server = None
+        self.running = True
 
     def run(self):
         self.processor.enqueue('listener_running', None)
+        self.server = socket(AF_INET, SOCK_STREAM)
+        self.server.bind(('0.0.0.0', self.port))
+        self.server.listen(1)
+        try:
+            while self.running:
+                conn, addr = self.server.accept()
+                self.processor.enqueue('tcp_connection', (conn, addr))
+        except:
+            None
+
+    def shutdown(self):
+        self.running = False
         s = socket(AF_INET, SOCK_STREAM)
-        s.bind(('0.0.0.0', self.port))
-        s.listen(1)
-        while True:
-            conn, addr = s.accept()
-            self.processor.enqueue('tcp_connection', (conn, addr))
+        s.connect(('127.0.0.1', self.port))
+        s.shutdown
 
 
 class TcpServer(Processor):
@@ -246,6 +264,10 @@ class TcpServer(Processor):
     def on_message_tcp_connection(self, topic, message):
         conn, addr = message
         SensorController('SensorController_%s:%s' % addr, conn, addr).start()
+
+    def on_shutdown(self):
+        Processor.on_shutdown(self)
+        self.listener.shutdown()
 
 
 class ButtonUpdater(Processor):
@@ -296,8 +318,7 @@ class Heatmap(Canvas):
 
 if __name__ == "__main__":
     Logger().start()
-    Processor('p1').start()
-    TcpServer('tcp', 8888, None).start()
+    TcpServer('SensorServer', 8888, None).start()
 
     #Application('ifconfig', 'ssh -tt root@192.168.11.1 ifconfig').start()
 
@@ -318,4 +339,4 @@ if __name__ == "__main__":
     h.pack(fill=BOTH, expand=True)
 
     mainloop()
-    publish('shutdown', None)
+    shutdown()
