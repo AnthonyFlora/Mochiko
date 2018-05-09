@@ -7,6 +7,7 @@ from sys import stdout
 from threading import Thread
 from time import sleep
 from Tkinter import *
+from ttk import Treeview
 import shlex
 
 
@@ -215,6 +216,11 @@ class SensorController(Processor):
 
     def on_message_receiver_data(self, topic, message):
         self.log('Receiver Data: %s' % (message))
+        m = re.match('\[ m=(.*) t=(.*) p=(.*) \]', message)
+        if m:
+            log('publishing sensor weather update')
+            publish('sensor_weather_update', ('%s:%s' % self.address, m.group(2), m.group(3)))
+            return
 
     def on_message_receiver_finished(self, topic, message):
         self.log('Receiver Finished: %s' % (message))
@@ -270,6 +276,19 @@ class TcpServer(Processor):
         self.listener.shutdown()
 
 
+class SensorSummaryUpdater(Processor):
+    def __init__(self, sensor_summary):
+        Processor.__init__(self, 'SensorSummaryUpdater')
+        self.set_handler('sensor_weather_update', self.on_message_sensor_weather_update)
+        self.sensor_summary = sensor_summary
+
+    def on_message_sensor_weather_update(self, topic, message):
+        sensor, temperature, pressure = message
+        self.sensor_summary.update(sensor, temperature, pressure)
+
+    def log(self, text):
+        log('%s - %s' % (self.name, text))
+
 class ButtonUpdater(Processor):
     def __init__(self, button, heatmap):
         Processor.__init__(self, 'ButtonUpdater')
@@ -313,12 +332,32 @@ class Heatmap(Canvas):
         self.after(1000, self.update)
 
 
+class SensorSummary(Treeview):
+    def __init__(self, parent):
+        Treeview.__init__(self, parent, columns=('Temperature (F)', 'Pressure (?)'))
+        self.heading('#0', text='Sensor')
+        self.heading('#1', text='Temperature (F)')
+        self.heading('#2', text='Pressure (?)')
+        self.column('#1', stretch=YES)
+        self.column('#2', stretch=YES)
+        self.column('#0', stretch=YES)
+
+    def update(self, sensor, temperature, pressure):
+        rows = self.get_children()
+        for row in rows:
+            if self.item(row)['text'] == sensor:
+                self.item(row)['values'] = (temperature, pressure)
+                return
+        self.insert('', 'end', text=sensor, values=(temperature, pressure))
+
+
+
 # -- Execution ---------------------------------------------------------------------------------------------------------
 
 
 if __name__ == "__main__":
-    Logger().start()
-    TcpServer('SensorServer', 8888, None).start()
+
+
 
     #Application('ifconfig', 'ssh -tt root@192.168.11.1 ifconfig').start()
 
@@ -326,17 +365,28 @@ if __name__ == "__main__":
 
     #master.after_idle(lambda: )
 
+    s = SensorSummary(master)
+    s.pack()
+
     class ZZ(Button):
-        def __init__(self, parent):
+        def __init__(self, parent, s):
             Button.__init__(self, parent, text="OK", command=self.callback)
+            self.s = s
         def callback(self):
             publish('log', 'Clicked')
+            self.s.update('moo','temp','press')
 
-    b = ZZ(master)
+    b = ZZ(master, s)
     b.pack()
+
+
 
     h = Heatmap(master, 20, 20)
     h.pack(fill=BOTH, expand=True)
+
+    Logger().start()
+    TcpServer('SensorServer', 8888, None).start()
+    SensorSummaryUpdater(s).start()
 
     mainloop()
     shutdown()
