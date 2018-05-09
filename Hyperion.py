@@ -210,7 +210,6 @@ class SensorController(Processor):
         Processor.on_shutdown(self)
         self.connection.shutdown(SHUT_RDWR)
         self.connection.close()
-        self.log('Shutting down')
 
     def on_message_receiver_running(self, topic, message):
         self.log('Receiver Running')
