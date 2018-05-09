@@ -208,6 +208,7 @@ class SensorController(Processor):
 
     def on_shutdown(self):
         Processor.on_shutdown(self)
+        self.connection.shutdown()
         self.connection.close()
         self.log('Shutting down')
 
