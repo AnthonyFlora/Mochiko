@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 from Queue import Queue
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, SHUT_RDWR
 from subprocess import Popen, PIPE, STDOUT
 from sys import stdout
 from threading import Thread
@@ -208,7 +208,7 @@ class SensorController(Processor):
 
     def on_shutdown(self):
         Processor.on_shutdown(self)
-        self.connection.shutdown()
+        self.connection.shutdown(SHUT_RDWR)
         self.connection.close()
         self.log('Shutting down')
 
