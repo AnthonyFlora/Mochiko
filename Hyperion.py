@@ -345,7 +345,7 @@ class SensorSummary(Treeview):
         rows = self.get_children()
         for row in rows:
             if self.item(row)['text'] == sensor:
-                self.item(row)['values'] = (temperature, pressure)
+                self.item(row, text=sensor, values=(temperature, pressure))
                 return
         self.insert('', 'end', text=sensor, values=(temperature, pressure))
 
