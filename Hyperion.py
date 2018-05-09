@@ -333,21 +333,24 @@ class Heatmap(Canvas):
 
 class SensorSummary(Treeview):
     def __init__(self, parent):
-        Treeview.__init__(self, parent, columns=('Temperature (F)', 'Pressure (inHG)'))
+        Treeview.__init__(self, parent, columns=('Temperature (F)', 'Pressure (inHG)', 'Last Update'))
         self.heading('#0', text='Sensor')
         self.heading('#1', text='Temperature (F)')
         self.heading('#2', text='Pressure (inHG)')
+        self.heading('#3', text='Last Update')
+        self.column('#0', stretch=YES)
         self.column('#1', stretch=YES)
         self.column('#2', stretch=YES)
-        self.column('#0', stretch=YES)
+        self.column('#3', stretch=YES)
+
 
     def update(self, sensor, temperature, pressure):
         rows = self.get_children()
         for row in rows:
             if self.item(row)['text'] == sensor:
-                self.item(row, text=sensor, values=(temperature, pressure))
+                self.item(row, text=sensor, values=(temperature, pressure, datetime.now()))
                 return
-        self.insert('', 'end', text=sensor, values=(temperature, pressure))
+        self.insert('', 'end', text=sensor, values=(temperature, pressure, datetime.now()))
 
 
 
