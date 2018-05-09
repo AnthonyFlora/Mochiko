@@ -218,7 +218,6 @@ class SensorController(Processor):
         self.log('Receiver Data: %s' % (message))
         m = re.match('\[ m=(.*) t=(.*) p=(.*) \]', message)
         if m:
-            log('publishing sensor weather update')
             publish('sensor_weather_update', ('%s:%s' % self.address, m.group(2), m.group(3)))
             return
 
@@ -334,10 +333,10 @@ class Heatmap(Canvas):
 
 class SensorSummary(Treeview):
     def __init__(self, parent):
-        Treeview.__init__(self, parent, columns=('Temperature (F)', 'Pressure (?)'))
+        Treeview.__init__(self, parent, columns=('Temperature (F)', 'Pressure (inHG)'))
         self.heading('#0', text='Sensor')
         self.heading('#1', text='Temperature (F)')
-        self.heading('#2', text='Pressure (?)')
+        self.heading('#2', text='Pressure (inHG)')
         self.column('#1', stretch=YES)
         self.column('#2', stretch=YES)
         self.column('#0', stretch=YES)
