@@ -237,7 +237,7 @@ class TcpListener(Thread):
         self.processor.enqueue('listener_running', None)
         self.server = socket(AF_INET, SOCK_STREAM)
         self.server.bind(('0.0.0.0', self.port))
-        self.server.listen(1)
+        self.server.listen(10)
         try:
             while self.running:
                 conn, addr = self.server.accept()
