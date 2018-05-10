@@ -218,7 +218,8 @@ class SensorController(Processor):
         self.log('Receiver Data: %s' % (message))
         m = re.match('\[ m=(.*) t=(.*) p=(.*) \]', message)
         if m:
-            publish('sensor_weather_update', ('%s:%s' % self.address, m.group(2), m.group(3)))
+            addr, port = self.address
+            publish('sensor_weather_update', (addr, m.group(2), m.group(3)))
             return
 
     def on_message_receiver_finished(self, topic, message):
