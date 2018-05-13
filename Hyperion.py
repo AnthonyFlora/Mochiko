@@ -326,12 +326,13 @@ class SensorSummaryUpdater(Processor):
 
 class GatewaySummaryUpdater(Application):
     def __init__(self, gateway_summary):
-        Application.__init__(self, 'GatewaySummaryUpdater', 'ssh -tt root@192.168.11.1 iwlist scan')
+        Application.__init__(self, 'GatewaySummaryUpdater', 'ssh -tt root@192.168.11.1 \'iwlist scan; iwconfig\'')
         self.gateway_summary = gateway_summary
         self.current_gateway = None
         self.current_essid = None
         self.current_signal_strength = None
         self.current_frequency = None
+        self.access_point = None
 
     def on_message_executor_running(self, topic, message):
         self.log('Application Running')
@@ -355,6 +356,11 @@ class GatewaySummaryUpdater(Application):
             self.current_essid = m.group(1)
             if self.current_essid == 'xfinitywifi':
                 self.gateway_summary.update(self.current_gateway, self.current_frequency, self.current_signal_strength)
+            return
+        m = re.match('.*Access Point: (.*)', message)
+        if m:
+            self.access_point = m.group(1)
+            self.gateway_summary.set_connected(self.access_point)
             return
 
     def on_message_executor_finished(self, topic, message):
@@ -425,24 +431,36 @@ class SensorSummary(Treeview):
 
 class GatewaySummary(Treeview):
     def __init__(self, parent):
-        Treeview.__init__(self, parent, columns=('Frequency (GHz)', 'Signal (dBm)', 'Last Update'))
+        Treeview.__init__(self, parent, columns=('Frequency (GHz)', 'Signal (dBm)', 'Connected', 'Last Update'))
         self.heading('#0', text='Gateway (MAC)')
         self.heading('#1', text='Frequency (GHz)')
         self.heading('#2', text='Signal (dBm)')
-        self.heading('#3', text='Last Update')
+        self.heading('#3', text='Connected')
+        self.heading('#4', text='Last Update')
         self.column('#0', stretch=YES)
         self.column('#1', stretch=YES)
         self.column('#2', stretch=YES)
         self.column('#3', stretch=YES)
+        self.column('#4', stretch=YES)
 
 
     def update(self, gateway, frequency, signal):
         rows = self.get_children()
         for row in rows:
             if self.item(row)['text'] == gateway:
-                self.item(row, text=gateway, values=(frequency, signal, datetime.now()))
+                log('FLORA %s' % self.item(row)['values'][2])
+                is_connected = self.item(row)['values'][2]
+                self.item(row, text=gateway, values=(frequency, signal, is_connected, datetime.now()))
                 return
-        self.insert('', 'end', text=gateway, values=(frequency, signal, datetime.now()))
+        self.insert('', 'end', text=gateway, values=(frequency, signal, '', datetime.now()))
+
+    def set_connected(self, gateway):
+        rows = self.get_children()
+        for row in rows:
+            if self.item(row)['text'] == gateway:
+                self.item(row)['values'][2] = 'Yes'
+            else:
+                self.item(row)['values'][2] = 'No'
 
 # -- Execution ---------------------------------------------------------------------------------------------------------
 
