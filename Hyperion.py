@@ -149,6 +149,41 @@ class Application(Processor):
     def on_startup(self):
         Processor.on_startup(self)
         self.log('Starting process: %s' % (self.command))
+        self.start_executor()
+
+    def start_executor(self):
+        self.executor = Executor(self.command, self)
+        self.executor.start()
+        self.log('Started process: %s' % (self.command))
+
+    def on_shutdown(self):
+        Processor.on_shutdown(self)
+        self.executor.terminate()
+
+    def on_message_executor_running(self, topic, message):
+        self.log('Application Running')
+
+    def on_message_executor_data(self, topic, message):
+        self.log('Application Data: %s' % (message))
+
+    def on_message_executor_finished(self, topic, message):
+        self.log('Application Finished: %s' % (message))
+
+
+class Application(Processor):
+    def __init__(self, name, command):
+        Processor.__init__(self, name)
+        self.command = command
+        self.set_handler('executor_running', self.on_message_executor_running)
+        self.set_handler('executor_data', self.on_message_executor_data)
+        self.set_handler('executor_finished', self.on_message_executor_finished)
+
+    def on_startup(self):
+        Processor.on_startup(self)
+        self.log('Starting process: %s' % (self.command))
+        self.start_executor()
+
+    def start_executor(self):
         self.executor = Executor(self.command, self)
         self.executor.start()
         self.log('Started process: %s' % (self.command))
@@ -286,8 +321,44 @@ class SensorSummaryUpdater(Processor):
         sensor, temperature, pressure = message
         self.sensor_summary.update(sensor, temperature, pressure)
 
-    def log(self, text):
-        log('%s - %s' % (self.name, text))
+
+class GatewaySummaryUpdater(Application):
+    def __init__(self, gateway_summary):
+        Application.__init__(self, 'GatewaySummaryUpdater', 'ssh -tt root@192.168.11.1 iwlist scan')
+        self.gateway_summary = gateway_summary
+        self.current_gateway = None
+        self.current_essid = None
+        self.current_signal_strength = None
+        self.current_frequency = None
+
+    def on_message_executor_running(self, topic, message):
+        self.log('Application Running')
+
+    def on_message_executor_data(self, topic, message):
+        self.log('Application Data: %s' % (message))
+        m = re.match('.*Address: (.*)', message)
+        if m:
+            self.current_gateway = m.group(1)
+            return
+        m = re.match('.*Frequency:(.*) GHz.*', message)
+        if m:
+            self.current_frequency = m.group(1)
+            return
+        m = re.match('.*Signal level=(.*) dBm', message)
+        if m:
+            self.current_signal_strength = m.group(1)
+            return
+        m = re.match('.*ESSID:\"(.*)\"', message)
+        if m:
+            self.current_essid = m.group(1)
+            if self.current_essid == 'xfinitywifi':
+                self.gateway_summary.update(self.current_gateway, self.current_frequency, self.current_signal_strength)
+            return
+
+    def on_message_executor_finished(self, topic, message):
+        self.log('Application Finished: %s' % (message))
+        self.start_executor()
+
 
 class ButtonUpdater(Processor):
     def __init__(self, button, heatmap):
@@ -300,9 +371,6 @@ class ButtonUpdater(Processor):
         self.button['text'] = message
         #new = Tk()
         #Heatmap(new, 20, 20).pack(fill=BOTH, expand=True)
-
-    def log(self, text):
-        log('%s - %s' % (self.name, text))
 
 # -- Displays ----------------------------------------------------------------------------------------------------------
 
@@ -344,7 +412,6 @@ class SensorSummary(Treeview):
         self.column('#2', stretch=YES)
         self.column('#3', stretch=YES)
 
-
     def update(self, sensor, temperature, pressure):
         rows = self.get_children()
         for row in rows:
@@ -354,6 +421,26 @@ class SensorSummary(Treeview):
         self.insert('', 'end', text=sensor, values=(temperature, pressure, datetime.now()))
 
 
+class GatewaySummary(Treeview):
+    def __init__(self, parent):
+        Treeview.__init__(self, parent, columns=('Frequency (GHz)', 'Signal (dBm)', 'Last Update'))
+        self.heading('#0', text='Gateway (MAC)')
+        self.heading('#1', text='Frequency (GHz)')
+        self.heading('#2', text='Signal (dBm)')
+        self.heading('#3', text='Last Update')
+        self.column('#0', stretch=YES)
+        self.column('#1', stretch=YES)
+        self.column('#2', stretch=YES)
+        self.column('#3', stretch=YES)
+
+
+    def update(self, gateway, frequency, signal):
+        rows = self.get_children()
+        for row in rows:
+            if self.item(row)['text'] == gateway:
+                self.item(row, text=gateway, values=(frequency, signal, datetime.now()))
+                return
+        self.insert('', 'end', text=gateway, values=(frequency, signal, datetime.now()))
 
 # -- Execution ---------------------------------------------------------------------------------------------------------
 
@@ -369,7 +456,7 @@ if __name__ == "__main__":
     #master.after_idle(lambda: )
 
     s = SensorSummary(master)
-    s.pack()
+    s.pack(fill=BOTH, expand=True)
 
     class ZZ(Button):
         def __init__(self, parent, s):
@@ -382,10 +469,10 @@ if __name__ == "__main__":
     b = ZZ(master, s)
     b.pack()
 
+    gateway_summary = GatewaySummary(master)
+    gateway_summary.pack(fill=BOTH, expand=True)
 
-
-    h = Heatmap(master, 20, 20)
-    h.pack(fill=BOTH, expand=True)
+    GatewaySummaryUpdater(gateway_summary).start()
 
     Logger().start()
     TcpServer('SensorServer', 8888, None).start()
