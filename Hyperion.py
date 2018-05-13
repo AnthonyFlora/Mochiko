@@ -254,8 +254,8 @@ class SensorController(Processor):
         m = re.match('\[ m=(.*) t=(.*) p=(.*) \]', message)
         if m:
             addr, port = self.address
-            temp = m.group(2) / 100.0
-            pres = m.group(3) / 100.0
+            temp = float(m.group(2)) / 100.0
+            pres = float(m.group(3)) / 100.0
             publish('sensor_weather_update', (addr, temp, pres))
             return
 
