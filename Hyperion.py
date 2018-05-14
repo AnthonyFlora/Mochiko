@@ -380,7 +380,7 @@ class Heatmap(Canvas):
 class SensorSummary(Treeview):
     def __init__(self, parent):
         Treeview.__init__(self, parent, columns=('Temperature (F)', 'Pressure (inHG)', 'Last Update'))
-        self.heading('#0', text='Sensor')
+        self.heading('#0', text='Sensor (IP)')
         self.heading('#1', text='Temperature (F)')
         self.heading('#2', text='Pressure (inHG)')
         self.heading('#3', text='Last Update')
