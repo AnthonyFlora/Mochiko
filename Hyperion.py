@@ -118,7 +118,7 @@ class Executor(Thread):
         Thread.__init__(self)
         self.command = command
         self.processor = processor
-        self.process = Popen(shlex.split(self.command), stdin=PIPE, stderr=STDOUT, stdout=PIPE)
+        self.process = Popen(shlex.split(self.command), stdin=PIPE, stderr=STDOUT, stdout=PIPE, close_fds=True)
 
     def run(self):
         self.processor.enqueue('executor_running', None)
@@ -136,38 +136,6 @@ class Executor(Thread):
 
     def terminate(self):
         self.process.terminate()
-
-
-class Application(Processor):
-    def __init__(self, name, command):
-        Processor.__init__(self, name)
-        self.command = command
-        self.set_handler('executor_running', self.on_message_executor_running)
-        self.set_handler('executor_data', self.on_message_executor_data)
-        self.set_handler('executor_finished', self.on_message_executor_finished)
-
-    def on_startup(self):
-        Processor.on_startup(self)
-        self.log('Starting process: %s' % (self.command))
-        self.start_executor()
-
-    def start_executor(self):
-        self.executor = Executor(self.command, self)
-        self.executor.start()
-        self.log('Started process: %s' % (self.command))
-
-    def on_shutdown(self):
-        Processor.on_shutdown(self)
-        self.executor.terminate()
-
-    def on_message_executor_running(self, topic, message):
-        self.log('Application Running')
-
-    def on_message_executor_data(self, topic, message):
-        self.log('Application Data: %s' % (message))
-
-    def on_message_executor_finished(self, topic, message):
-        self.log('Application Finished: %s' % (message))
 
 
 class Application(Processor):
@@ -326,7 +294,7 @@ class SensorSummaryUpdater(Processor):
 
 class GatewaySummaryUpdater(Application):
     def __init__(self, gateway_summary):
-        Application.__init__(self, 'GatewaySummaryUpdater', 'ssh -tt root@192.168.11.1 \'iwlist scan; iwconfig\'')
+        Application.__init__(self, 'GatewaySummaryUpdater', 'ssh -o ServerAliveInterval=5 -tt root@192.168.11.1 \'iwlist scan; iwconfig;\'')
         self.gateway_summary = gateway_summary
         self.current_gateway = None
         self.current_essid = None
@@ -339,6 +307,12 @@ class GatewaySummaryUpdater(Application):
 
     def on_message_executor_data(self, topic, message):
         self.log('Application Data: %s' % (message))
+        m = re.match('.*Access Point: (.*)', message)
+        if m:
+            self.access_point = m.group(1)
+            self.gateway_summary.set_connected(self.access_point)
+            self.log('Setting AP connected %s' % self.access_point)
+            return
         m = re.match('.*Address: (.*)', message)
         if m:
             self.current_gateway = m.group(1)
@@ -356,11 +330,6 @@ class GatewaySummaryUpdater(Application):
             self.current_essid = m.group(1)
             if self.current_essid == 'xfinitywifi':
                 self.gateway_summary.update(self.current_gateway, self.current_frequency, self.current_signal_strength)
-            return
-        m = re.match('.*Access Point: (.*)', message)
-        if m:
-            self.access_point = m.group(1)
-            self.gateway_summary.set_connected(self.access_point)
             return
 
     def on_message_executor_finished(self, topic, message):
@@ -448,7 +417,6 @@ class GatewaySummary(Treeview):
         rows = self.get_children()
         for row in rows:
             if self.item(row)['text'] == gateway:
-                log('FLORA %s' % self.item(row)['values'][2])
                 is_connected = self.item(row)['values'][2]
                 self.item(row, text=gateway, values=(frequency, signal, is_connected, datetime.now()))
                 return
@@ -458,9 +426,10 @@ class GatewaySummary(Treeview):
         rows = self.get_children()
         for row in rows:
             if self.item(row)['text'] == gateway:
-                self.item(row)['values'][2] = 'Yes'
+                log('Found it!')
+                self.set(row, 'Connected', 'Yes')
             else:
-                self.item(row)['values'][2] = 'No'
+                self.set(row, 'Connected', 'No')
 
 # -- Execution ---------------------------------------------------------------------------------------------------------
 
