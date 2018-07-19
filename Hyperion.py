@@ -10,7 +10,6 @@ from Tkinter import *
 from ttk import Treeview
 import shlex
 
-
 # -- State -------------------------------------------------------------------------------------------------------------
 
 subscriptions = defaultdict(lambda: [])
@@ -469,3 +468,7 @@ if __name__ == "__main__":
 
     mainloop()
     shutdown()
+
+
+
+

@@ -1,0 +1,23 @@
+*** MESSAGES ***
+
+COMPONENT_STATUS
+- component_id
+
+TEMPERATURE_REQUEST
+- component_id
+- temperature_f
+
+PRESSURE_REQUEST
+- component_id
+- pressure_mmHg
+
+ACOUSTIC_REQUEST
+- component_id
+- number_of_samples
+- sample_length_us
+
+RESET_REQUEST
+- component_id
+
+
+

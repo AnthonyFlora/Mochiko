@@ -1,0 +1,6 @@
+MQTT_HOST = "localhost"
+MQTT_PORT = 1883
+MQTT_KEEPALIVE_INTERVAL = 45
+MQTT_TOPIC = "helloTopic"
+MQTT_MSG = "hello MQTT"
+
