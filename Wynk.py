@@ -1,128 +1,137 @@
 #!/usr/bin/python
 
-import gobject
 import gtk
-import collections
-import math
 
 COLOR_WINDOW_BACKGROUND = gtk.gdk.Color('#0c0c14')
 COLOR_WIDGET_BACKGROUND = gtk.gdk.Color('#0c0c14')
 COLOR_WIDGET_FOREGROUND = gtk.gdk.Color('#27292d')
 COLOR_WIDGET_TITLE = gtk.gdk.Color('#828282')
 COLOR_WIDGET_VALUE = gtk.gdk.Color('#df9524')
+COLOR_WIDGET_ON = gtk.gdk.Color('#00ff00')
+COLOR_WIDGET_OFF = gtk.gdk.Color('#ff0000')
+COLOR_WIDGET_TOGGLE = gtk.gdk.Color('#444444')
 
 GRID_LENGTH = 80
 GRID_HEIGHT = 60
 
 
-class ValueDisplay(gtk.DrawingArea):
-    def __init__(self, param, value=0.0):
+def set_cairo_color(cairo, color):
+    cairo.set_source_rgb(
+        float(color.red) / 65535,
+        float(color.green) / 65535,
+        float(color.blue) / 65535)
+
+
+class Widget(gtk.DrawingArea):
+    def __init__(self, grid_cols=1, grid_rows=1):
         gtk.DrawingArea.__init__(self)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        self.connect('button-press-event', self.on_click)
+        self.grid_cols = grid_cols
+        self.grid_rows = grid_rows
         self.connect('expose-event', self.expose)
-        self.set_size_request(GRID_LENGTH, GRID_HEIGHT)
+        self.set_size_request(self.grid_cols * GRID_LENGTH, self.grid_rows * GRID_HEIGHT)
+        self.modify_bg(gtk.STATE_NORMAL, COLOR_WIDGET_BACKGROUND)
+
+    def on_click(self, window, event):
+        self.repaint()
+
+    def expose(self, widget, event):
+        print 'Widget::expose'
+        cairo = widget.window.cairo_create()
+        set_cairo_color(cairo, COLOR_WIDGET_FOREGROUND)
+        cairo.rectangle(1, 1, self.grid_cols * GRID_LENGTH - 2, self.grid_rows * GRID_HEIGHT - 2)
+        cairo.fill()
+
+    def repaint(self):
+        self.queue_draw()
+
+
+class ValueDisplay(Widget):
+    def __init__(self, param, grid_cols=1, grid_rows=1, value=0.0):
+        Widget.__init__(self, grid_cols, grid_rows)
         self.param = param
         self.value = None
         self.set_value(value)
-        self.modify_bg(gtk.STATE_NORMAL, COLOR_WIDGET_BACKGROUND)
+
+    def on_click(self, window, event):
+        self.value = str(float(self.value) + 1.0)
+        self.repaint()
 
     def set_value(self, value):
         self.value = str(value)
 
     def expose(self, widget, event):
         cairo = widget.window.cairo_create()
-
-        cairo.set_source_rgb(
-            float(COLOR_WIDGET_FOREGROUND.red) / 65535,
-            float(COLOR_WIDGET_FOREGROUND.green) / 65535,
-            float(COLOR_WIDGET_FOREGROUND.blue) / 65535)
-        cairo.rectangle(1, 1, GRID_LENGTH - 2, GRID_HEIGHT - 2)
+        set_cairo_color(cairo, COLOR_WIDGET_FOREGROUND)
+        cairo.rectangle(1, 1, self.grid_cols * GRID_LENGTH - 2, self.grid_rows * GRID_HEIGHT - 2)
         cairo.fill()
 
-        cairo.set_source_rgb(
-            float(COLOR_WIDGET_TITLE.red) / 65535,
-            float(COLOR_WIDGET_TITLE.green) / 65535,
-            float(COLOR_WIDGET_TITLE.blue) / 65535)
+        set_cairo_color(cairo, COLOR_WIDGET_TITLE)
         cairo.select_font_face("Helvetica")
         cairo.set_font_size(12)
         cairo.move_to(5, 15)
         cairo.show_text(self.param)
 
-        cairo.set_source_rgb(
-            float(COLOR_WIDGET_VALUE.red) / 65535,
-            float(COLOR_WIDGET_VALUE.green) / 65535,
-            float(COLOR_WIDGET_VALUE.blue) / 65535)
+        set_cairo_color(cairo, COLOR_WIDGET_VALUE)
         cairo.select_font_face("Helvetica")
-        cairo.set_font_size(24)
-        cairo.move_to(5, GRID_HEIGHT * 0.80)
+        cairo.set_font_size(18)
+        cairo.move_to(5, self.grid_rows * GRID_HEIGHT * 0.80)
         cairo.show_text(self.value)
 
     def repaint(self):
         self.queue_draw()
 
 
-class ElementRectangle():
-    def __init__(self, x, y, w, h):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+class OnOffButton(Widget):
+    def __init__(self, param, grid_cols=1, grid_rows=1):
+        Widget.__init__(self, grid_cols, grid_rows)
+        self.param = param
+        self.is_on = False
 
-    def render(self, cairo):
-        cairo.set_source_rgb(0.5, 0.5, 0.5)
-        cairo.rectangle(self.x - (self.w / 2.0), self.y - (self.h / 2.0), self.w, self.h)
-        cairo.fill()
+    def set_on(self):
+        self.is_on = True
 
+    def set_off(self):
+        self.is_on = False
 
-class ElementCircle():
-    def __init__(self, x, y, r):
-        self.x = x
-        self.y = y
-        self.r = r
+    def toggle(self):
+        self.is_on = not self.is_on
 
-    def render(self, cairo):
-        cairo.set_source_rgb(0.5, 0.5, 0.5)
-        cairo.arc(self.x, self.y, self.r, 0, 2 * math.pi)
-        cairo.fill()
-
-
-class ElementLineSeries():
-    def __init__(self, samples_x, samples_y):
-        self.samples_x = samples_x
-        self.samples_y = samples_y
-
-    def render(self, cairo):
-        cairo.set_source_rgb(0.5, 0.5, 0.5)
-        cairo.set_line_width(1)
-        cairo.move_to(self.samples_x[0], self.samples_y[0])
-        for i in range(1, len(self.samples_x) - 1):
-            cairo.rel_line_to(self.samples_x[i], self.samples_y[i])
-            cairo.move_to(self.samples_x[i], self.samples_y[i])
-            print i, self.samples_x[i], self.samples_y[i]
-        cairo.stroke()
-
-
-class Canvas(gtk.DrawingArea):
-    def __init__(self):
-        gtk.DrawingArea.__init__(self)
-        self.connect('expose-event', self.expose)
-        self.elements = collections.defaultdict()
-
-    def get_elements(self):
-        return self.elements
-
-    def add_element(self, name, element):
-        self.elements[name] = element
-
-    def remove_element(self, name):
-        self.elements.pop(name)
-
-    def remove_all_elements(self):
-        self.elements.clear()
+    def on_click(self, window, event):
+        self.toggle()
+        self.repaint()
 
     def expose(self, widget, event):
+        w = self.allocation.width - 4
+        h = self.allocation.height - 4
         cairo = widget.window.cairo_create()
-        for k,v in self.elements.iteritems():
-            v.render(cairo)
+
+        set_cairo_color(cairo, COLOR_WIDGET_FOREGROUND)
+        cairo.rectangle(1, 1, self.grid_cols * GRID_LENGTH - 2, self.grid_rows * GRID_HEIGHT - 2)
+        cairo.fill()
+
+        set_cairo_color(cairo, COLOR_WIDGET_TITLE)
+        cairo.select_font_face("Helvetica")
+        cairo.set_font_size(12)
+        cairo.move_to(5, 15)
+        cairo.show_text(self.param)
+
+        cairo.translate(2 + w * 0.1, 2 + h * 0.4)
+        set_cairo_color(cairo, COLOR_WIDGET_TOGGLE)
+        cairo.rectangle(0, 0, w * 0.8, h * 0.4)
+        cairo.fill()
+
+        if not self.is_on:
+            cairo.translate(0, 0)
+            set_cairo_color(cairo, COLOR_WIDGET_OFF)
+            cairo.rectangle(0, 0, w * 0.4, h * 0.4)
+            cairo.fill()
+        else:
+            cairo.translate(w * 0.4, 0)
+            set_cairo_color(cairo, COLOR_WIDGET_ON)
+            cairo.rectangle(0, 0, w * 0.4, h * 0.4)
+            cairo.fill()
 
     def repaint(self):
         self.queue_draw()
@@ -147,15 +156,22 @@ class Display(gtk.Window):
 
         v = ValueDisplay('HOTDOGS')
         self.fixed.put(v, GRID_LENGTH * 2, GRID_HEIGHT * 0)
+        v.set_value(123.45)
 
         v = ValueDisplay('HOTDOGS')
         self.fixed.put(v, GRID_LENGTH * 3, GRID_HEIGHT * 0)
-        v.set_value(33.45)
+        v.set_value(33.455)
+
+        v = ValueDisplay('IS THERE A PROBLEM?', 4, 1)
+        self.fixed.put(v, GRID_LENGTH * 0, GRID_HEIGHT * 1)
+        v.set_value('YES THERE IS A PROBLEM')
+
+        b = OnOffButton('Hello', 1, 1)
+        self.fixed.put(b, GRID_LENGTH * 0, GRID_HEIGHT * 2)
 
         self.set_resizable(False)
         self.show_all()
 
 
 Display()
-
 gtk.main()
