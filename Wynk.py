@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 import gtk
+import collections
 
 COLOR_WINDOW_BACKGROUND = gtk.gdk.Color('#0c0c14')
 COLOR_WIDGET_BACKGROUND = gtk.gdk.Color('#0c0c14')
 COLOR_WIDGET_FOREGROUND = gtk.gdk.Color('#27292d')
 COLOR_WIDGET_TITLE = gtk.gdk.Color('#828282')
-COLOR_WIDGET_VALUE = gtk.gdk.Color('#df9524')
+COLOR_WIDGET_VALUE = gtk.gdk.Color('#cccccc')
 COLOR_WIDGET_ON = gtk.gdk.Color('#00ff00')
 COLOR_WIDGET_OFF = gtk.gdk.Color('#ff0000')
 COLOR_WIDGET_TOGGLE = gtk.gdk.Color('#444444')
@@ -55,11 +56,12 @@ class ValueDisplay(Widget):
         self.set_value(value)
 
     def on_click(self, window, event):
-        self.value = str(float(self.value) + 1.0)
+        self.set_value(str(float(self.value) + 1.0))
         self.repaint()
 
     def set_value(self, value):
         self.value = str(value)
+        self.repaint()
 
     def expose(self, widget, event):
         cairo = widget.window.cairo_create()
@@ -89,18 +91,28 @@ class OnOffButton(Widget):
         self.param = param
         self.is_on = False
 
-    def set_on(self):
-        self.is_on = True
+    def set(self, is_on):
+        if self.is_on != is_on:
+            if is_on:
+                self.on_change_on()
+            else:
+                self.on_change_off()
 
-    def set_off(self):
-        self.is_on = False
+        self.is_on = is_on
+        self.repaint()
 
     def toggle(self):
-        self.is_on = not self.is_on
+        self.set(not self.is_on)
 
     def on_click(self, window, event):
+        print event
         self.toggle()
-        self.repaint()
+
+    def on_change_on(self):
+        None
+
+    def on_change_off(self):
+        None
 
     def expose(self, widget, event):
         w = self.allocation.width - 4
@@ -137,16 +149,47 @@ class OnOffButton(Widget):
         self.queue_draw()
 
 
+class Table(Widget):
+    def __init__(self, grid_cols=1, grid_rows=1):
+        Widget.__init__(self, grid_cols, grid_rows)
+        self.title = 'Title'
+        self.cols = ['Col1', 'Col2']
+        self.rows = collections.deque(maxlen=10)
+
+    def add_row(self, row):
+        self.rows.append(row)
+        self.repaint()
+
+    def expose(self, widget, event):
+        w = self.allocation.width - 4
+        h = self.allocation.height - 4
+        cairo = widget.window.cairo_create()
+
+        set_cairo_color(cairo, COLOR_WIDGET_FOREGROUND)
+        cairo.rectangle(1, 1, self.grid_cols * GRID_LENGTH - 2, self.grid_rows * GRID_HEIGHT - 2)
+        cairo.fill()
+
+        set_cairo_color(cairo, COLOR_WIDGET_TITLE)
+        cairo.select_font_face("Helvetica")
+        cairo.set_font_size(12)
+        cairo.move_to(5, 15)
+        cairo.show_text(self.title)
+
+    def repaint(self):
+        self.queue_draw()
+
+
 class Display(gtk.Window):
-    def __init__(self):
+    def __init__(self, cols=8, rows=8):
         gtk.Window.__init__(self)
         self.set_title('Wynk Demo')
-        self.set_size_request(GRID_LENGTH * 4, GRID_HEIGHT * 8)
+        self.set_size_request(GRID_LENGTH * cols, GRID_HEIGHT * rows)
         self.set_position(gtk.WIN_POS_NONE)
         self.modify_bg(gtk.STATE_NORMAL, COLOR_WINDOW_BACKGROUND)
         self.connect('destroy', gtk.main_quit)
         self.fixed = gtk.Fixed()
         self.add(self.fixed)
+        self.set_resizable(False)
 
         v = ValueDisplay('HOTDOGS')
         self.fixed.put(v, GRID_LENGTH * 0, GRID_HEIGHT * 0)
@@ -162,16 +205,16 @@ class Display(gtk.Window):
         self.fixed.put(v, GRID_LENGTH * 3, GRID_HEIGHT * 0)
         v.set_value(33.455)
 
-        v = ValueDisplay('IS THERE A PROBLEM?', 4, 1)
-        self.fixed.put(v, GRID_LENGTH * 0, GRID_HEIGHT * 1)
-        v.set_value('YES THERE IS A PROBLEM')
+        self.v = ValueDisplay('IS THERE A PROBLEM?', 8, 1)
+        self.fixed.put(self.v, GRID_LENGTH * 0, GRID_HEIGHT * 1)
+        self.v.set_value('YES THERE IS A PROBLEM')
 
-        b = OnOffButton('Hello', 1, 1)
-        self.fixed.put(b, GRID_LENGTH * 0, GRID_HEIGHT * 2)
-
-        self.set_resizable(False)
+    def show(self):
         self.show_all()
 
+    def add_widget(self, widget, row, col):
+        self.fixed.put(widget, GRID_LENGTH * row, GRID_HEIGHT * col)
 
-Display()
-gtk.main()
+
+def start():
+    gtk.main()
