@@ -34,6 +34,11 @@ def updateBeacons(beacons):
             beacon.signalCurr = int(m.group(1))
             beacon.signalBest = max(beacon.signalCurr, beacon.signalBest)
             beacon.signalWorst = min(beacon.signalCurr, beacon.signalWorst)
+        m = re.search('level=(.*)/', line)
+        if m != None:
+            beacon.signalCurr = int(m.group(1))
+            beacon.signalBest = max(beacon.signalCurr, beacon.signalBest)
+            beacon.signalWorst = min(beacon.signalCurr, beacon.signalWorst)
         m = re.search('ESSID:"(.*)"', line)
         if m != None:
             beacon.ssid = m.group(1)

@@ -180,7 +180,7 @@ class Table(Widget):
 
 
 class Display(gtk.Window):
-    def __init__(self, cols=8, rows=8):
+    def __init__(self, cols=6, rows=8):
         gtk.Window.__init__(self)
         self.set_title('Wynk Demo')
         self.set_size_request(GRID_LENGTH * cols, GRID_HEIGHT * rows)
