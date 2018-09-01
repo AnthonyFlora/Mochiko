@@ -9,6 +9,14 @@ echo '\n*** STOPPING SERVICES ***'
 sudo systemctl stop dnsmasq
 sudo systemctl stop hostapd
 
+echo '\n*** UPDATING CONFIG dhcpcd.conf ***'
+sudo bash -c 'echo "interface wlan0" >> /etc/dhcpcd.conf'
+sudo bash -c 'echo "  static ip_address=192.168.20.1/24" >> /etc/dhcpcd.conf'
+sudo bash -c 'echo "  nohook wpa_supplicant" >> /etc/dhcpcd.conf'
+
+echo '\n*** STARTING SERVICES ***'
+sudo systemctl dhcpcd restart
+
 echo '\n*** UPDATING CONFIG dnsmasq.conf ***'
 sudo bash -c 'echo "" >> /etc/dnsmasq.conf'
 sudo bash -c 'echo "interface=wlan0" >> /etc/dnsmasq.conf'
