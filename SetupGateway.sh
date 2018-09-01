@@ -54,3 +54,6 @@ sudo bash -c 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
 sudo iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
 sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
 sudo sed -i "\$i iptables-restore < /etc/iptables.ipv4.nat" /etc/rc.local
+
+echo '\n*** REBOOTING ***'
+sudo reboot
