@@ -1,5 +1,3 @@
-#! bash
-
 sudo apt-get update
 echo 'y' | sudo apt-get upgrade
 echo 'y' | sudo apt-get install dnsmasq hostapd
