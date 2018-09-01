@@ -15,7 +15,7 @@ sudo bash -c 'echo "  static ip_address=192.168.20.1/24" >> /etc/dhcpcd.conf'
 sudo bash -c 'echo "  nohook wpa_supplicant" >> /etc/dhcpcd.conf'
 
 echo '\n*** STARTING SERVICES ***'
-sudo systemctl dhcpcd restart
+sudo service dhcpcd restart
 
 echo '\n*** UPDATING CONFIG dnsmasq.conf ***'
 sudo bash -c 'echo "" >> /etc/dnsmasq.conf'
