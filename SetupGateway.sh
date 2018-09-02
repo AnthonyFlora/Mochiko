@@ -55,8 +55,6 @@ sudo systemctl start hostapd
 sudo systemctl start dnsmasq
 
 echo '\n*** SETTING UP FORWARDING ***'
-sudo modprobe ip_tables
-sudo echo "ip_tables" >> /etc/modules
 sudo bash -c 'echo "" >> /etc/sysctl.conf'
 sudo bash -c 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
 sudo iptables -I INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
