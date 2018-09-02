@@ -27,7 +27,6 @@ echo '\n*** UPDATING CONFIG dnsmasq.conf ***'
 sudo bash -c 'echo "" > /etc/dnsmasq.conf'
 sudo bash -c 'echo "expand-hosts" >> /etc/dnsmasq.conf'
 sudo bash -c 'echo "interface=wlan0" >> /etc/dnsmasq.conf'
-sudo bash -c 'echo "authoritative" >> /etc/dnsmasq.conf'
 sudo bash -c 'echo "dhcp-range=192.168.20.2,192.168.20.30,255.255.255.0,24h" >> /etc/dnsmasq.conf'
 
 echo '\n*** UPDATING CONFIG hostapd.conf ***'
@@ -56,6 +55,8 @@ sudo systemctl start hostapd
 sudo systemctl start dnsmasq
 
 echo '\n*** SETTING UP FORWARDING ***'
+sudo modprobe ip_tables
+sudo echo "ip_tables" >> /etc/modules
 sudo bash -c 'echo "" >> /etc/sysctl.conf'
 sudo bash -c 'echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf'
 sudo iptables -I INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
