@@ -20,4 +20,12 @@ RESET_REQUEST
 - component_id
 
 
+/hyperion
+  - Loader.py
+  /components
+    - ProcessRunner.py
+    - LoaderGui.py
+    - HyperionGui.py
+  /messages
+  /utilities
 

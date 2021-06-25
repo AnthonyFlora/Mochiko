@@ -65,3 +65,9 @@ sudo sed -i "\$i iptables-restore < /etc/iptables.ipv4.nat" /etc/rc.local
 
 echo '\n*** REBOOTING ***'
 sudo reboot
+
+
+# To drive wlan1
+# sudo killall wpa_supplicant
+# sudo ifconfig wlan1 up
+# sudo iwconfig wlan1 essid xfinitywifi ap CE:CA:B5:EF:B5:50

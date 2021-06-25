@@ -178,6 +178,10 @@ class Table(Widget):
     def repaint(self):
         self.queue_draw()
 
+class Plot(Widget):
+    def __init__(self):
+        None
+
 
 class Display(gtk.Window):
     def __init__(self, cols=6, rows=8):
