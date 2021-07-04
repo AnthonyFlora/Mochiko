@@ -24,7 +24,7 @@ class Service:
     def run(self):
         try:
             self.log('Connecting..')
-            self.connect_to_broker()
+            #self.connect_to_broker()
             self.log('Processing..')
             #self.client.loop_start()
             self.processing_loop()
