@@ -12,7 +12,7 @@ class SurveillanceCamera(Service.Service):
         self.time_between_snapshots = 1.0
 
     def on_connect(self, client, userdata, flags, rc):
-      self.log('on_connect..')
+      self.log('on_connect.. (rc=%d)' % rc)
       self.client.subscribe('mochiko/surveillance/surveillance_start')
       self.client.subscribe('mochiko/surveillance/surveillance_stop')
       self.client.message_callback_add('mochiko/surveillance/surveillance_start', self.on_observation_start)
