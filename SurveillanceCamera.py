@@ -1,5 +1,6 @@
 import time
 import Service
+import io
 
 
 # -----------------------------------------------------------------------------
@@ -22,6 +23,7 @@ class SurveillanceCamera(Service.Service):
         self.log('on_disconnect..')
 
     def processing_loop(self):
+        self.log('processing_loop..')
         with picamera.PiCamera(resolution='720p', framerate=30) as camera:
             camera.start_preview()
             # Give the camera some warm-up time
