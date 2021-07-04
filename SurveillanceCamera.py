@@ -35,8 +35,8 @@ class SurveillanceCamera(Service.Service):
             start = time.time()
             camera.start_recording(self, format='mjpeg')
         #     camera.wait_recording(5)
-        #     camera.stop_recording()
-        #     finish = time.time()
+            camera.stop_recording()
+            finish = time.time()
 
     def on_observation_start(self, client, userdata, message):
         self.log('on_observation_start -- ' + message.topic + ' : ' + str(message.payload))
