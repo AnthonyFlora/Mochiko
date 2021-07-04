@@ -29,8 +29,8 @@ class SurveillanceCamera(Service.Service):
             camera.start_preview()
             # Give the camera some warm-up time
             time.sleep(2)
-        #     start = time.time()
-        #     #camera.start_recording(self, format='mjpeg')
+            start = time.time()
+            camera.start_recording(self, format='mjpeg')
         #     #camera.wait_recording(5)
         #     #camera.stop_recording()
         #     finish = time.time()
