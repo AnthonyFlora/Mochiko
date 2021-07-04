@@ -43,15 +43,15 @@ class SurveillanceCamera(Service.Service):
 
     def write(self, buf):
         print('write len %d' % len(buf))
-        if buf.startswith(b'\xff\xd8'):
-            print('start new file')
-            # Start of new frame; close the old one (if any) and
-            # open a new output
-            if self.output:
-                self.output.close()
-            self.frame_num += 1
-            self.output = io.open('image.mjepg', 'ab')
-        self.output.write(buf)
+        # if buf.startswith(b'\xff\xd8'):
+        #     print('start new file')
+        #     # Start of new frame; close the old one (if any) and
+        #     # open a new output
+        #     if self.output:
+        #         self.output.close()
+        #     self.frame_num += 1
+        #     self.output = io.open('image.mjepg', 'ab')
+        # self.output.write(buf)
 
 # -----------------------------------------------------------------------------
 
