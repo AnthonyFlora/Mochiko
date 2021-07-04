@@ -27,7 +27,7 @@ class Service:
             self.connect_to_broker()
             self.log('Processing..')
             self.client.loop_start()
-            self.processing_loop()
+            #self.processing_loop()
         except:
             self.log('Faulted..')
             self.client.loop_stop()
