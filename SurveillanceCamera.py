@@ -29,9 +29,9 @@ class SurveillanceCamera(Service.Service):
             # Give the camera some warm-up time
             time.sleep(2)
             start = time.time()
-            camera.start_recording(self, format='mjpeg')
-            camera.wait_recording(5)
-            camera.stop_recording()
+            #camera.start_recording(self, format='mjpeg')
+            #camera.wait_recording(5)
+            #camera.stop_recording()
             finish = time.time()
 
     def on_observation_start(self, client, userdata, message):
