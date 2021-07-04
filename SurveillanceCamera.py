@@ -12,6 +12,8 @@ class SurveillanceCamera(Service.Service):
         Service.Service.__init__(self)
         self.time_next_snapshot = 0.0
         self.time_between_snapshots = 1.0
+        self.frame_num = 0
+        self.output = None
 
     def on_connect(self, client, userdata, flags, rc):
       self.log('on_connect.. (rc=%d)' % rc)
