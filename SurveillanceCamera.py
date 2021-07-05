@@ -16,8 +16,7 @@ motion_dtype = np.dtype([
 
 class MotionDetector(object):
 
-    def __init__(self, camera):
-        camera_width, camera_height = camera.resolution
+    def __init__(self, camera_width, camera_height):
         self.cols = (camera_width + 15) // 16
         self.cols += 1 # there's always an extra column
         self.rows = (camera_height + 15) // 16
