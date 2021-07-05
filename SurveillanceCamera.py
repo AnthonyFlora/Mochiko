@@ -86,6 +86,7 @@ class SurveillanceCamera(Service.Service):
         with picamera.PiCamera(resolution=(1024, 768), framerate=30) as camera:
             camera.start_recording(self.frame_router, format='mjpeg') # hi res
             camera.start_recording(self.motion_detector, format='mjpeg', splitter_port=2, resize=(320, 240))
+            self.start_record()
             while True:
                 camera.wait_recording(1)
                 if self.motion_detector.is_recent_motion():
