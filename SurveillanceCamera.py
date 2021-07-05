@@ -46,11 +46,10 @@ class SurveillanceCamera(Service.Service):
 
     def write(self, buf):
         if buf.startswith(b'\xff\xd8'):
-            print('write len %d' % len(buf))
             if not self.time_next_snapshot:
                 self.time_next_snapshot = time.time()
             if self.time_next_snapshot <= time.time():
-                self.log('taking snapshot')
+                self.log('taking snapshot, write len %d' % len(buf))
             self.time_next_snapshot = self.time_next_snapshot + self.time_between_snapshots
         # if buf.startswith(b'\xff\xd8'):
         #     print('start new file')
