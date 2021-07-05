@@ -21,7 +21,7 @@ class MotionDetector(object):
         self.cols += 1 # there's always an extra column
         self.rows = (camera_height + 15) // 16
         self.time_of_last_motion = 0
-        self.recent_motion_threshold = 1.0
+        self.recent_motion_threshold = 5.0
         self.num_frames = 0
 
     def write(self, s):
