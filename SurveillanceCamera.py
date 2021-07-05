@@ -127,7 +127,7 @@ class SurveillanceCamera(Service.Service):
         Service.Service.__init__(self)
         self.camera = picamera.PiCamera(resolution=(1024, 768), framerate=30)
         self.motion_detector = MotionDetector(320, 240)
-        self.frame_recorder = FrameRecorder()
+        self.frame_recorder = FrameRecorder(base='/mnt/nas/')
         self.frame_throttler = FrameThrottler()
         self.frame_throttler.next = self.frame_recorder.write
         self.frame_throttler.set_time_between_frames(1.0/30.0)
