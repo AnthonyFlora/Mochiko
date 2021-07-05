@@ -77,7 +77,7 @@ class FrameRecorder(object):
 
     def __init__(self, base='./'):
         self.base = base
-        self.next = next
+        self.next = None
         self.path = ''
         self.file = None
         self.enabled = False
