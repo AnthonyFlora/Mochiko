@@ -44,46 +44,59 @@ class MotionDetector(object):
         return is_recent_motion
 
 
-class FrameRouter(object):
+class FrameThrottler(object):
 
-    def __init__(self):
+    def __init__(self, next=None):
         self.time_between_frames = None
         self.time_of_next_frame = 0
-        self.stream_function = None
-        self.record_file = None
+        self.next = next
 
     def write(self, buf):
-        # Invalid FPS stops routing
-        if not self.time_between_frames:
-            return
-
         # Non-JPEG stops routing
         if not buf.startswith(b'\xff\xd8'):
             return
-
+        # Invalid FPS stops routing
+        if not self.time_between_frames:
+            return
         # Frame too early stops processing
         time_now = time.time()
-        is_frame_expired = self.time_of_next_frame <= time_now
-        if not is_frame_expired:
+        if not self.time_of_next_frame <= time_now:
             return
-
-        # If enabled, stream frame
-        if self.stream_function:
-            self.log('sending stream, len %d' % len(buf))
-            self.stream_function(buf)
-
-        # If enabled, record frame
-        if self.record_file:
-            self.record_file.write(buf)
-
         # Schedule next frame
         self.time_of_next_frame = time_now + self.time_between_frames
+        # Hand off processing to next
+        if self.next:
+            self.next(buf)
 
-    def set_frames_per_second(self, fps):
-        if fps == 0.0:
-            self.time_between_frames = None
-        else:
-            self.time_between_frames = 1.0 / fps
+    def set_time_between_frames(self, time_between_frames):
+        self.time_between_frames = time_between_frames
+
+
+class FrameRecorder(object):
+
+    def __init__(self, base='./', next=None):
+        self.base = base
+        self.next = next
+        self.path = ''
+        self.file = None
+
+    def write(self, buf):
+        # Write if enabled
+        if self.file:
+            self.file(buf)
+        # Hand off processing to next
+        if self.next:
+            self.next(buf)
+
+    def enable(self):
+        self.path = self.base + Service.timestamp() + '.mjpeg'
+        self.file = io.open(self.base + Service.timestamp() + '.mjpeg', 'wb')
+        self.log('Started recording to %s' % self.path)
+
+    def disable(self):
+        self.file.close()
+        self.file = None
+        self.log('Stopped recording to %s' % self.path)
 
 
 class SurveillanceCamera(Service.Service):
@@ -91,7 +104,7 @@ class SurveillanceCamera(Service.Service):
     def __init__(self):
         Service.Service.__init__(self)
         self.motion_detector = MotionDetector(320, 240)
-        self.frame_router = FrameRouter()
+        self.frame_router = FrameThrottler(FrameRecorder)
         self.time_last_motion = 0
 
     def on_connect(self, client, userdata, flags, rc):
