@@ -3,6 +3,7 @@ import Service
 import picamera
 import io
 import numpy as np
+import socket
 
 
 # -----------------------------------------------------------------------------
@@ -86,6 +87,7 @@ class FrameRecorder(Service.Service):
         self.next = None
         self.path = ''
         self.file = None
+        self.host = socket.gethostname()
         self.enabled = False
 
     def set_next(self, next):
@@ -96,7 +98,7 @@ class FrameRecorder(Service.Service):
         if self.enabled:
             if not self.file:
                 self.path = self.base + Service.timestamp() + '.mjpeg'
-                self.file = io.open(self.base + Service.timestamp() + '.mjpeg', 'wb')
+                self.file = io.open(self.base + Service.timestamp() + '_' + self.host + '.mjpeg', 'wb')
                 self.log('Started recording to %s' % self.path)
             if self.file:
                 self.file.write(buf)
