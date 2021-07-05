@@ -30,7 +30,7 @@ class SurveillanceCamera(Service.Service):
         with picamera.PiCamera(resolution='720p', framerate=30) as camera:
             camera.start_preview()
             # Give the camera some warm-up time
-            time.sleep(3)
+            time.sleep(5)
             start = time.time()
             camera.start_recording(self, format='mjpeg')
             camera.wait_recording(5)
