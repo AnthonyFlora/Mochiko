@@ -34,10 +34,7 @@ class MotionDetector(object):
             np.square(data['x'].astype(np.float)) +
             np.square(data['y'].astype(np.float))
         ).clip(0, 255).astype(np.uint8)
-        # If there're more than 10 vectors with a magnitude greater
-        # than 60, then say we've detected motion
-        print('%d of %d' % ((data > 30).sum(), len(data)))
-        if (data > 30).sum() > 10:
+        if (data > 30).sum() > 1:
             print('Motion detected!')
             self.time_of_last_motion = time.time()
 
