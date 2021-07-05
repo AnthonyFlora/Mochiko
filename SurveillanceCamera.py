@@ -45,7 +45,6 @@ class SurveillanceCamera(Service.Service):
 
     def write(self, buf):
         if buf.startswith(b'\xff\xd8'):
-            self.log('frame received curr=%s next=%s' % (str(time.time()), str(self.time_next_snapshot)))
             if not self.time_next_snapshot:
                 self.time_next_snapshot = time.time()
             if self.time_next_snapshot <= time.time():
