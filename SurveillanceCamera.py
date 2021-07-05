@@ -16,16 +16,15 @@ motion_dtype = np.dtype([
 
 class MotionDetector(object):
 
-    def __init__(self, camera_width, camera_height):
+    def __init__(self, camera):
+        camera_width, camera_height = camera.resolution
         self.cols = (camera_width + 15) // 16
         self.cols += 1 # there's always an extra column
         self.rows = (camera_height + 15) // 16
         self.time_of_last_motion = 0
         self.recent_motion_threshold = 5.0
-        self.num_frames = 0
 
     def write(self, s):
-        self.num_frames = self.num_frames + 1
         # Load the motion data from the string to a numpy array
         data = np.frombuffer(s, dtype=motion_dtype)
         # Re-shape it and calculate the magnitude of each vector
@@ -46,9 +45,12 @@ class MotionDetector(object):
 
 class FrameThrottler(object):
 
-    def __init__(self, next=None):
+    def __init__(self):
         self.time_between_frames = None
         self.time_of_next_frame = 0
+        self.next = None
+
+    def set_next(self, next):
         self.next = next
 
     def write(self, buf):
@@ -74,29 +76,40 @@ class FrameThrottler(object):
 
 class FrameRecorder(object):
 
-    def __init__(self, base='./', next=None):
+    def __init__(self, base='./'):
         self.base = base
         self.next = next
         self.path = ''
         self.file = None
+        self.enabled = False
+
+    def set_next(self, next):
+        self.next = next
 
     def write(self, buf):
         # Write if enabled
-        if self.file:
-            self.file(buf)
+        if self.enabled:
+            if not self.file:
+                self.path = self.base + Service.timestamp() + '.mjpeg'
+                self.file = io.open(self.base + Service.timestamp() + '.mjpeg', 'wb')
+                self.log('Started recording to %s' % self.path)
+            if self.file:
+                self.file(buf)
+        if not self.enabled:
+            if self.file:
+                self.log('Stopped recording to %s' % self.path)
+                self.file.close()
+                self.file = None
+                self.path = ''
         # Hand off processing to next
         if self.next:
             self.next(buf)
 
     def enable(self):
-        self.path = self.base + Service.timestamp() + '.mjpeg'
-        self.file = io.open(self.base + Service.timestamp() + '.mjpeg', 'wb')
-        self.log('Started recording to %s' % self.path)
+        self.enabled = True
 
     def disable(self):
-        self.file.close()
-        self.file = None
-        self.log('Stopped recording to %s' % self.path)
+        self.enabled = False
 
 
 class SurveillanceCamera(Service.Service):
@@ -104,8 +117,9 @@ class SurveillanceCamera(Service.Service):
     def __init__(self):
         Service.Service.__init__(self)
         self.motion_detector = MotionDetector(320, 240)
-        self.frame_router = FrameThrottler(FrameRecorder)
-        self.time_last_motion = 0
+        self.frame_recorder = FrameRecorder()
+        self.frame_throttler = FrameThrottler()
+        self.frame_throttler.next = self.frame_recorder
 
     def on_connect(self, client, userdata, flags, rc):
         self.log('on_connect.. (rc=%d)' % rc)
@@ -120,13 +134,17 @@ class SurveillanceCamera(Service.Service):
     def processing_loop(self):
         self.log('processing_loop..')
         with picamera.PiCamera(resolution=(1024, 768), framerate=30) as camera:
-            camera.start_recording(self.frame_router, format='mjpeg') # hi res
+            camera.start_recording(self.frame_throttler, format='mjpeg') # hi res
             camera.start_recording('/dev/null', format='h264', motion_output=self.motion_detector, splitter_port=2, resize=(320, 240))
             while True:
                 time_beg_loop = time.time()
                 self.motion_detector.num_frames = 0
                 camera.wait_recording(1)
                 self.log('is_recent_motion=%d' % self.motion_detector.is_recent_motion())
+                if self.motion_detector.is_recent_motion():
+                    self.frame_recorder.enable()
+                else:
+                    self.frame_recorder.disable()
                 time_end_loop = time.time()
                 time_dur_loop = time_end_loop - time_beg_loop
                 self.log('Processed FPS: %0.2f' % (self.motion_detector.num_frames / time_dur_loop))
