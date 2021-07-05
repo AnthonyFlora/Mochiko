@@ -16,7 +16,10 @@ motion_dtype = np.dtype([
 
 class MotionDetector(object):
 
-    def __init__(self):
+    def __init__(self, camera_width, camera_height):
+        self.cols = (camera_width + 15) // 16
+        self.cols += 1 # there's always an extra column
+        self.rows = (camera_height + 15) // 16
         self.time_of_last_motion = 0
         self.recent_motion_threshold = 1.0
         self.num_frames = 0
@@ -89,7 +92,7 @@ class SurveillanceCamera(Service.Service):
 
     def __init__(self):
         Service.Service.__init__(self)
-        self.motion_detector = MotionDetector()
+        self.motion_detector = MotionDetector(320, 240)
         self.frame_router = FrameRouter()
         self.time_last_motion = 0
 
