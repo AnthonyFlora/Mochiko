@@ -1,6 +1,5 @@
 import paho.mqtt.client as mqtt
 import time
-import datetime
 import Config
 import traceback
 
