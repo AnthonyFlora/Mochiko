@@ -23,6 +23,7 @@ class MotionDetector(Service.Service):
         self.rows = (camera_height + 15) // 16
         self.time_of_last_motion = 0
         self.recent_motion_threshold = 5.0
+        self.num_frames = 0
 
     def write(self, s):
         # Load the motion data from the string to a numpy array
@@ -36,6 +37,8 @@ class MotionDetector(Service.Service):
         if (data > 30).sum() > 1:
             self.log('Motion detected!')
             self.time_of_last_motion = time.time()
+        # update frame count
+        self.num_frames = self.num_frames + 1
 
     def is_recent_motion(self):
         time_since_last_motion = time.time() - self.time_of_last_motion
