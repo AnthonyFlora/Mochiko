@@ -99,8 +99,8 @@ class FrameRecorder(Service.Service):
         # Write if enabled
         if self.enabled:
             if not self.file:
-                self.path = self.base + Service.timestamp() + '.mjpeg'
-                self.file = io.open(self.base + Service.timestamp() + '_' + self.host + '.mjpeg', 'wb')
+                self.path = self.base + Service.timestamp() +  '_' + self.host + '.mjpeg'
+                self.file = io.open(self.path, 'wb')
                 self.log('Started recording to %s' % self.path)
             if self.file:
                 self.file.write(buf)
