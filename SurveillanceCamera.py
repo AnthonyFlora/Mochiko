@@ -42,7 +42,7 @@ class MotionDetector(object):
         return is_recent_motion
 
 
-class FrameThrottler(object):
+class FrameThrottler(Service):
 
     def __init__(self):
         self.time_between_frames = None
@@ -73,7 +73,7 @@ class FrameThrottler(object):
         self.time_between_frames = time_between_frames
 
 
-class FrameRecorder(object):
+class FrameRecorder(Service):
 
     def __init__(self, base='./'):
         self.base = base
