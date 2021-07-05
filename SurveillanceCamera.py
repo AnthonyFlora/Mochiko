@@ -22,8 +22,9 @@ class MotionDetector(object):
         self.num_frames = 0
 
     def write(self, s):
+        self.num_frames = self.num_frames + 1
         # Load the motion data from the string to a numpy array
-        data = np.fromstring(s, dtype=motion_dtype)
+        data = np.frombuffer(s, dtype=motion_dtype)
         # Re-shape it and calculate the magnitude of each vector
         data = data.reshape((self.rows, self.cols))
         data = np.sqrt(
