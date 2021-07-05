@@ -27,15 +27,13 @@ class SurveillanceCamera(Service.Service):
 
     def processing_loop(self):
         self.log('processing_loop..')
-        time.sleep(5)
         with picamera.PiCamera(resolution='720p', framerate=30) as camera:
             camera.start_preview()
             # Give the camera some warm-up time
             time.sleep(2)
             start = time.time()
             camera.start_recording(self, format='mjpeg')
-            #camera.wait_recording(5)
-            time.sleep(5)
+            camera.wait_recording(5)
             camera.stop_recording()
             finish = time.time()
 
