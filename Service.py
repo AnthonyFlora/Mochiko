@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 import Config
+import traceback
 
 
 def timestamp():
@@ -30,6 +31,7 @@ class Service:
             self.processing_loop()
         except:
             self.log('Faulted..')
+            traceback.print_exc()
             self.client.loop_stop()
         finally:
             self.log('Shutting down..')
