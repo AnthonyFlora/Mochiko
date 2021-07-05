@@ -137,7 +137,7 @@ class SurveillanceCamera(Service.Service):
     def start_record(self):
         path = '%d.mjpeg' % time.time()
         self.frame_router.record_file = io.open(path, 'wb')
-        self.log('Started recording to %d' % path)
+        self.log('Started recording to %s' % path)
 
     def stop_record(self):
         self.frame_router.record_file.close()
