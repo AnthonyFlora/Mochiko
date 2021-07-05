@@ -10,7 +10,7 @@ class SurveillanceCamera(Service.Service):
 
     def __init__(self):
         Service.Service.__init__(self)
-        self.time_next_snapshot = 0.0
+        self.time_next_snapshot = None
         self.time_between_snapshots = 1.0
         self.frame_num = 0
         self.output = None
@@ -45,7 +45,13 @@ class SurveillanceCamera(Service.Service):
         self.log('on_observation_stop -- ' + message.topic + ' : ' + str(message.payload))
 
     def write(self, buf):
-        print('write len %d' % len(buf))
+        if buf.startswith(b'\xff\xd8'):
+            print('write len %d' % len(buf))
+            if not self.time_next_snapshot:
+                self.time_next_snapshot = time.time()
+            if self.time_next_snapshot <= time.time():
+                self.log('taking snapshot')
+            self.time_next_snapshot = self.time_next_snapshot + self.time_between_snapshots
         # if buf.startswith(b'\xff\xd8'):
         #     print('start new file')
         #     # Start of new frame; close the old one (if any) and
