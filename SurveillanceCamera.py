@@ -11,15 +11,18 @@ class MotionDetector(object):
     def __init__(self):
         self.time_of_last_motion = 0
         self.recent_motion_threshold = 1.0
+        self.num_frames = 0
 
     def write(self, buf):
         if buf.startswith(b'\xff\xd8'):
-            None # detect motion, store time
+            self.num_frames = self.num_frames + 1
+            # TODO detect
 
     def is_recent_motion(self):
         time_since_last_motion = time.time() - self.time_of_last_motion
         is_recent_motion = time_since_last_motion <= self.recent_motion_threshold
         return is_recent_motion
+
 
 class FrameRouter(object):
 
@@ -89,9 +92,14 @@ class SurveillanceCamera(Service.Service):
             self.frame_router.set_frames_per_second(30)
             self.start_record()
             while True:
+                time_beg_loop = time.time()
+                self.motion_detector.num_frames = 0
                 camera.wait_recording(1)
                 if self.motion_detector.is_recent_motion():
                     None
+                time_end_loop = time.time()
+                time_dur_loop = time_end_loop - time_beg_loop
+                self.log('Processed FPS: %0.2f' % (self.motion_detector.num_frames / time_dur_loop))
 
     def send_stream_frame(self, frame):
         self.log('send_stream_frame')
