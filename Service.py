@@ -29,11 +29,13 @@ class Service:
             self.log('Processing..')
             self.client.loop_start()
             self.processing_loop()
+        except KeyboardInterrupt:
+            self.log('Keyboard Interrupt..')
         except:
             self.log('Faulted..')
             traceback.print_exc()
-            self.client.loop_stop()
         finally:
+            self.client.loop_stop()
             self.log('Shutting down..')
 
     def connect_to_broker(self):
