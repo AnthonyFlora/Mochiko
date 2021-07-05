@@ -108,14 +108,16 @@ class SurveillanceCamera(Service.Service):
         with picamera.PiCamera(resolution=(1024, 768), framerate=30) as camera:
             camera.start_recording(self.frame_router, format='mjpeg') # hi res
             camera.start_recording('/dev/null', format='h264', motion_output=self.motion_detector, splitter_port=2, resize=(320, 240))
-            self.frame_router.set_frames_per_second(30)
-            self.start_record()
             while True:
                 time_beg_loop = time.time()
                 self.motion_detector.num_frames = 0
                 camera.wait_recording(1)
                 if self.motion_detector.is_recent_motion():
-                    None
+                    self.frame_router.set_frames_per_second(30)
+                    self.start_record()
+                else:
+                    self.frame_router.set_frames_per_second(0)
+                    self.stop_record()
                 time_end_loop = time.time()
                 time_dur_loop = time_end_loop - time_beg_loop
                 self.log('Processed FPS: %0.2f' % (self.motion_detector.num_frames / time_dur_loop))
@@ -130,11 +132,14 @@ class SurveillanceCamera(Service.Service):
         self.frame_router.stream_function = None
 
     def start_record(self):
-        self.frame_router.record_file = io.open('%d.mjpeg' % time.time(), 'wb')
+        path = '%d.mjpeg' % time.time()
+        self.frame_router.record_file = io.open(path, 'wb')
+        self.log('Started recording to %d' % path)
 
     def stop_record(self):
         self.frame_router.record_file.close()
         self.frame_router.record_file = None
+        self.log('Stopped recording')
 
 
 # -----------------------------------------------------------------------------
