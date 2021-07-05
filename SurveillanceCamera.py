@@ -157,7 +157,7 @@ class SurveillanceCamera(Service.Service):
                 self.frame_recorder.disable()
             time_end_loop = time.time()
             time_dur_loop = time_end_loop - time_beg_loop
-            self.log('Processed FPS: %0.2f, is_motion=%d' % (self.motion_detector.num_frames / time_dur_loop), self.motion_detector.is_recent_motion())
+            self.log('Processed FPS: %0.2f, is_motion=%d, motion_score=%d' % (self.motion_detector.num_frames / time_dur_loop, self.motion_detector.is_recent_motion(), self.motion_detector.score_of_last_motion)
 
     def send_stream_frame(self, frame):
         self.log('send_stream_frame')
