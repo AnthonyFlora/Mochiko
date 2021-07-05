@@ -120,6 +120,7 @@ class SurveillanceCamera(Service.Service):
         self.frame_recorder = FrameRecorder()
         self.frame_throttler = FrameThrottler()
         self.frame_throttler.next = self.frame_recorder
+        self.frame_throttler.set_time_between_frames(1.0/30.0)
 
     def on_connect(self, client, userdata, flags, rc):
         self.log('on_connect.. (rc=%d)' % rc)
