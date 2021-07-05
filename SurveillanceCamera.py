@@ -30,6 +30,8 @@ class FrameRouter(object):
         self.record_file = None
 
     def write(self, buf):
+        print('write attempt len %d' % len(buf))
+
         # Invalid FPS stops routing
         if not self.time_between_frames:
             return
