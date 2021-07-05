@@ -17,10 +17,10 @@ class SurveillanceCamera(Service.Service):
 
     def on_connect(self, client, userdata, flags, rc):
       self.log('on_connect.. (rc=%d)' % rc)
-      #self.client.subscribe('mochiko/surveillance/surveillance_start')
-      #self.client.subscribe('mochiko/surveillance/surveillance_stop')
-      #self.client.message_callback_add('mochiko/surveillance/surveillance_start', self.on_observation_start)
-      #self.client.message_callback_add('mochiko/surveillance/surveillance_stop', self.on_observation_stop)
+      self.client.subscribe('mochiko/surveillance/surveillance_start')
+      self.client.subscribe('mochiko/surveillance/surveillance_stop')
+      self.client.message_callback_add('mochiko/surveillance/surveillance_start', self.on_observation_start)
+      self.client.message_callback_add('mochiko/surveillance/surveillance_stop', self.on_observation_stop)
 
     def on_disconnect(self, client, userdata, rc):
         self.log('on_disconnect..')
