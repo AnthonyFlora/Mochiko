@@ -50,15 +50,9 @@ class SurveillanceCamera(Service.Service):
             if self.time_next_snapshot <= time.time():
                 self.log('taking snapshot, write len %d' % len(buf))
                 self.time_next_snapshot = self.time_next_snapshot + self.time_between_snapshots
-        # if buf.startswith(b'\xff\xd8'):
-        #     print('start new file')
-        #     # Start of new frame; close the old one (if any) and
-        #     # open a new output
-        #     if self.output:
-        #         self.output.close()
-        #     self.frame_num += 1
-        #     self.output = io.open('image.mjepg', 'ab')
-        # self.output.write(buf)
+                self.output = io.open('%d.jpg' % time.time(), 'wb')
+                self.output.write(buf)
+                self.output.close()
 
 # -----------------------------------------------------------------------------
 
