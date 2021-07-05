@@ -27,7 +27,6 @@ class MotionDetector(Service.Service):
         self.recent_motion_threshold = 5.0
         self.num_frames = 0
 
-
     def write(self, s):
         # Load the motion data from the string to a numpy array
         data = np.frombuffer(s, dtype=motion_dtype)
@@ -37,7 +36,7 @@ class MotionDetector(Service.Service):
             np.square(data['x'].astype(np.float)) +
             np.square(data['y'].astype(np.float))
         ).clip(0, 255).astype(np.uint8)
-        self.score_of_last_motion = (data > 10).sum()
+        self.score_of_last_motion = ((data > 10).sum()).count()
         if self.score_of_last_motion > 1:
             self.log('Motion detected!')
             self.time_of_last_motion = time.time()
