@@ -23,8 +23,10 @@ class MotionDetector(Service.Service):
         self.cols += 1 # there's always an extra column
         self.rows = (camera_height + 15) // 16
         self.time_of_last_motion = 0
+        self.score_of_last_motion = 0
         self.recent_motion_threshold = 5.0
         self.num_frames = 0
+
 
     def write(self, s):
         # Load the motion data from the string to a numpy array
@@ -35,7 +37,8 @@ class MotionDetector(Service.Service):
             np.square(data['x'].astype(np.float)) +
             np.square(data['y'].astype(np.float))
         ).clip(0, 255).astype(np.uint8)
-        if (data > 30).sum() > 1:
+        self.score_of_last_motion = (data > 10).sum()
+        if self.score_of_last_motion > 1:
             self.log('Motion detected!')
             self.time_of_last_motion = time.time()
         # update frame count
@@ -148,14 +151,13 @@ class SurveillanceCamera(Service.Service):
             time_beg_loop = time.time()
             self.motion_detector.num_frames = 0
             self.camera.wait_recording(1)
-            self.log('is_recent_motion=%d' % self.motion_detector.is_recent_motion())
             if self.motion_detector.is_recent_motion():
                 self.frame_recorder.enable()
             else:
                 self.frame_recorder.disable()
             time_end_loop = time.time()
             time_dur_loop = time_end_loop - time_beg_loop
-            self.log('Processed FPS: %0.2f' % (self.motion_detector.num_frames / time_dur_loop))
+            self.log('Processed FPS: %0.2f, is_motion=%d, motion_score=%d' % (self.motion_detector.num_frames / time_dur_loop), self.motion_detector.is_recent_motion(), self.motion_detector.score_of_last_motion)
 
     def send_stream_frame(self, frame):
         self.log('send_stream_frame')
