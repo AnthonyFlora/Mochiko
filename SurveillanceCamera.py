@@ -14,9 +14,10 @@ motion_dtype = np.dtype([
     ])
 
 
-class MotionDetector(object):
+class MotionDetector(Service.Service):
 
     def __init__(self, camera_width, camera_height):
+        Service.Service.__init__(self)
         self.cols = (camera_width + 15) // 16
         self.cols += 1 # there's always an extra column
         self.rows = (camera_height + 15) // 16
@@ -33,7 +34,7 @@ class MotionDetector(object):
             np.square(data['y'].astype(np.float))
         ).clip(0, 255).astype(np.uint8)
         if (data > 30).sum() > 1:
-            print('Motion detected!')
+            self.log('Motion detected!')
             self.time_of_last_motion = time.time()
 
     def is_recent_motion(self):
@@ -42,9 +43,10 @@ class MotionDetector(object):
         return is_recent_motion
 
 
-class FrameThrottler(Service):
+class FrameThrottler(Service.Service):
 
     def __init__(self):
+        Service.Service.__init__(self)
         self.time_between_frames = None
         self.time_of_next_frame = 0
         self.next = None
@@ -73,9 +75,10 @@ class FrameThrottler(Service):
         self.time_between_frames = time_between_frames
 
 
-class FrameRecorder(Service):
+class FrameRecorder(Service.Service):
 
     def __init__(self, base='./'):
+        Service.Service.__init__(self)
         self.base = base
         self.next = None
         self.path = ''
