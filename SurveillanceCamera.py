@@ -115,7 +115,7 @@ class SurveillanceCamera(Service.Service):
                 time_beg_loop = time.time()
                 self.motion_detector.num_frames = 0
                 camera.wait_recording(1)
-                if self.motion_detector.is_recent_motion():
+                if self.motion_detector.is_recent_motion() and not self.frame_router.record_file:
                     self.frame_router.set_frames_per_second(30)
                     self.start_record()
                 elif self.frame_router.record_file:
