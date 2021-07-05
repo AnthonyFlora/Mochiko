@@ -36,7 +36,7 @@ class MotionDetector(Service.Service):
             np.square(data['x'].astype(np.float)) +
             np.square(data['y'].astype(np.float))
         ).clip(0, 255).astype(np.uint8)
-        self.score_of_last_motion = ((data > 10).sum()).count()
+        self.score_of_last_motion = ((data > 10).sum())
         if self.score_of_last_motion > 1:
             self.log('Motion detected!')
             self.time_of_last_motion = time.time()
