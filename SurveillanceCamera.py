@@ -29,13 +29,10 @@ class SurveillanceCamera(Service.Service):
         self.log('processing_loop..')
         with picamera.PiCamera(resolution='720p', framerate=30) as camera:
             camera.start_preview()
-            # Give the camera some warm-up time
-            time.sleep(5)
-            start = time.time()
+            time.sleep(2) # Give the camera some warm-up time
             camera.start_recording(self, format='mjpeg')
-            camera.wait_recording(5)
-            camera.stop_recording()
-            finish = time.time()
+            while True:
+                camera.wait_recording(1)
 
     def on_observation_start(self, client, userdata, message):
         self.log('on_observation_start -- ' + message.topic + ' : ' + str(message.payload))
