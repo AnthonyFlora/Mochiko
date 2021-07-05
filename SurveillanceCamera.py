@@ -30,10 +30,6 @@ class FrameRouter(object):
         self.record_file = None
 
     def write(self, buf):
-        print('write attempt len %d' % len(buf))
-        print('time between frames %s' % str(self.time_between_frames))
-
-
         # Invalid FPS stops routing
         if not self.time_between_frames:
             return
@@ -44,10 +40,7 @@ class FrameRouter(object):
 
         # Frame too early stops processing
         time_now = time.time()
-        is_frame_expired = self.time_of_next_frame >= time_now
-
-        print('time next = %0.6f, time now = %0.6f' % (self.time_of_next_frame, time_now))
-
+        is_frame_expired = self.time_of_next_frame <= time_now
         if not is_frame_expired:
             return
 
