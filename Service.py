@@ -1,11 +1,12 @@
 import paho.mqtt.client as mqtt
 import time
+import datetime
 import Config
 import traceback
 
 
 def timestamp():
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    return str(datetime.datetime.now())
 
 
 def log(text):
