@@ -2,9 +2,17 @@ import time
 import Service
 import picamera
 import io
+import numpy as np
 
 
 # -----------------------------------------------------------------------------
+
+motion_dtype = np.dtype([
+    ('x', 'i1'),
+    ('y', 'i1'),
+    ('sad', 'u2'),
+    ])
+
 
 class MotionDetector(object):
 
@@ -13,10 +21,20 @@ class MotionDetector(object):
         self.recent_motion_threshold = 1.0
         self.num_frames = 0
 
-    def write(self, buf):
-        if buf.startswith(b'\xff\xd8'):
-            self.num_frames = self.num_frames + 1
-            # TODO detect
+    def write(self, s):
+        # Load the motion data from the string to a numpy array
+        data = np.fromstring(s, dtype=motion_dtype)
+        # Re-shape it and calculate the magnitude of each vector
+        data = data.reshape((self.rows, self.cols))
+        data = np.sqrt(
+            np.square(data['x'].astype(np.float)) +
+            np.square(data['y'].astype(np.float))
+        ).clip(0, 255).astype(np.uint8)
+        # If there're more than 10 vectors with a magnitude greater
+        # than 60, then say we've detected motion
+        if (data > 60).sum() > 10:
+            print('Motion detected!')
+            self.time_of_last_motion = time.time()
 
     def is_recent_motion(self):
         time_since_last_motion = time.time() - self.time_of_last_motion
@@ -88,7 +106,7 @@ class SurveillanceCamera(Service.Service):
         self.log('processing_loop..')
         with picamera.PiCamera(resolution=(1024, 768), framerate=30) as camera:
             camera.start_recording(self.frame_router, format='mjpeg') # hi res
-            camera.start_recording(self.motion_detector, format='mjpeg', splitter_port=2, resize=(320, 240))
+            camera.start_recording('/dev/null', format='h264', motion_output=self.motion_detector, splitter_port=2, resize=(320, 240))
             self.frame_router.set_frames_per_second(30)
             self.start_record()
             while True:
