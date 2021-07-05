@@ -108,24 +108,21 @@ class SurveillanceCamera(Service.Service):
         self.log('processing_loop..')
         with picamera.PiCamera(resolution=(1024, 768), framerate=30) as camera:
             camera.start_recording(self.frame_router, format='mjpeg') # hi res
-            camera.start_recording('/dev/null', format='h264', motion_output=self.on_h264_motion_detect, splitter_port=2, resize=(320, 240))
+            camera.start_recording('/dev/null', format='h264', motion_output=self.motion_detector, splitter_port=2, resize=(320, 240))
             while True:
                 time_beg_loop = time.time()
-                # self.motion_detector.num_frames = 0
+                self.motion_detector.num_frames = 0
                 camera.wait_recording(1)
-                # self.log('is_recent_motion=%d record_file=%s' % (self.motion_detector.is_recent_motion(), str(self.frame_router.record_file)))
-                # if self.motion_detector.is_recent_motion() and not self.frame_router.record_file:
-                #     self.frame_router.set_frames_per_second(30)
-                #     self.start_record()
-                # elif not self.motion_detector.is_recent_motion() and self.frame_router.record_file:
-                #     self.frame_router.set_frames_per_second(0)
-                #     self.stop_record()
-                # time_end_loop = time.time()
-                # time_dur_loop = time_end_loop - time_beg_loop
-                # self.log('Processed FPS: %0.2f' % (self.motion_detector.num_frames / time_dur_loop))
-
-    def on_h264_motion_detect(self, s):
-        self.log('on_h264_motion_detect len=%d' % len(s))
+                self.log('is_recent_motion=%d record_file=%s' % (self.motion_detector.is_recent_motion(), str(self.frame_router.record_file)))
+                if self.motion_detector.is_recent_motion() and not self.frame_router.record_file:
+                    self.frame_router.set_frames_per_second(30)
+                    self.start_record()
+                elif not self.motion_detector.is_recent_motion() and self.frame_router.record_file:
+                    self.frame_router.set_frames_per_second(0)
+                    self.stop_record()
+                time_end_loop = time.time()
+                time_dur_loop = time_end_loop - time_beg_loop
+                self.log('Processed FPS: %0.2f' % (self.motion_detector.num_frames / time_dur_loop))
 
     def send_stream_frame(self, frame):
         self.log('send_stream_frame')
