@@ -54,7 +54,7 @@ class SurveillanceService(Service.Service):
         self.frame_buffer.seek(0)
         self.camera.capture(self.frame_buffer, 'jpeg')
         self.frame_buffer.seek(0)
-        self.client.publish(self.topic_sensor_stream, self.frame_buffer)
+        self.client.publish(self.topic_sensor_stream, self.frame_buffer.read())
 
 
 # -- Main ---------------------------------------------------------------------
