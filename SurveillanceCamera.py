@@ -1,5 +1,5 @@
 import time
-import Service
+from core import Service
 import picamera
 import io
 import numpy as np
@@ -99,7 +99,7 @@ class FrameRecorder(Service.Service):
         # Write if enabled
         if self.enabled:
             if not self.file:
-                self.path = self.base + Service.timestamp() +  '_' + self.host + '.mjpeg'
+                self.path = self.base + Service.timestamp() + '_' + self.host + '.mjpeg'
                 self.file = io.open(self.path, 'wb')
                 self.log('Started recording to %s' % self.path)
             if self.file:

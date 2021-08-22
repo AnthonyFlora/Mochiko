@@ -1,4 +1,4 @@
-import Service
+from core import Service
 import time
 
 # -----------------------------------------------------------------------------
