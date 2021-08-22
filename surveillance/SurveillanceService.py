@@ -46,6 +46,7 @@ class SurveillanceService(Service.Service):
         except:
             None
         self.log('config -- ' + str(self.config))
+        self.take_picture()
 
     def take_picture(self):
         self.log('Taking picture')

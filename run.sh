@@ -7,5 +7,5 @@ export PYTHONPATH=${DIRECTORY}
 
 if [ $HOST = "raspberrypi" ]; then
   echo $HOST
-  python3 ${DIRECTORY}/surveillance/SurveillanceService.py &
+  python3 ${DIRECTORY}/surveillance/SurveillanceService.py
 fi
