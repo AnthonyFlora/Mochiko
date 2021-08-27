@@ -33,13 +33,14 @@ def gen():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
-def mqtt_jpeg_streamer(camera):
+def mqtt_jpeg_streamer(sensor):
+    topic_stream = 'surveillance/%s/stream' % sensor
     while True:
         file = BytesIO()
         image = Image.new('RGB', size=(500, 500), color=(random.randrange(256), random.randrange(256), random.randrange(256)))
         font = ImageFont.truetype('Helvetica', 16)
         draw = ImageDraw.Draw(image)
-        text = '%s @ %s' % (camera, datetime.datetime.now())
+        text = '%s @ %s' % (sensor, datetime.datetime.now())
         draw.text((0, 0), text, (0, 0, 0), font)
         image.save(file, 'jpeg')
         file.name = 'test.jpeg'
@@ -50,9 +51,9 @@ def mqtt_jpeg_streamer(camera):
 
 
 @app.route('/video_feed')
-@app.route('/video_feed/<camera>')
-def video_feed(camera='None'):
-    return Response(mqtt_jpeg_streamer(camera),
+@app.route('/video_feed/<sensor>')
+def video_feed(sensor='None'):
+    return Response(mqtt_jpeg_streamer(sensor),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 

@@ -1,5 +1,6 @@
 from core import Service
 from collections import defaultdict
+import threading
 import json
 import time
 import io
@@ -24,6 +25,7 @@ class SurveillanceService(Service.Service):
         self.camera = picamera.PiCamera()
         self.camera.resolution = (640, 480)
         self.frame_buffer = io.BytesIO()
+        self.fps_throttle = threading.Event();
 
     def on_connect(self, client, userdata, flags, rc):
         self.log('Connected')
@@ -35,7 +37,9 @@ class SurveillanceService(Service.Service):
 
     def processing_loop(self):
         while True:
-            time.sleep(1)
+            while not self.fps_throttle.wait(timeout=None):
+                self.fps_throttle.clear()
+                self.take_picture()
 
     def on_config(self, client, userdata, message):
         self.log('on_config -- ' + message.topic + ' : ' + str(message.payload))
@@ -47,7 +51,7 @@ class SurveillanceService(Service.Service):
             None
         self.log('config -- ' + str(self.config))
         self.log('config complete, ..')
-        self.take_picture()
+        self.fps_throttle.set()
 
     def take_picture(self):
         self.log('Taking picture')
