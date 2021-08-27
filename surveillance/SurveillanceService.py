@@ -53,8 +53,8 @@ class SurveillanceService(Service.Service):
                 self.config[key] = value
         except:
             None
-        self.log('config -- ' + str(self.config))
-        self.log('config complete, ..')
+        for key, value in self.config.items():
+            self.log('config[%s] = %s' % (key, value))
         self.fps_throttle.set()
 
     def take_picture(self):
