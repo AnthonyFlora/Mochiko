@@ -41,9 +41,7 @@ class SurveillanceService(Service.Service):
             frame_delay = None
             if self.config['fps'] > 0:
                 frame_delay = 1.0 / self.config['fps']
-            self.log('fps=%s frame_delay=%s' % (self.config['fps'], str(frame_delay)))
             self.fps_throttle.wait(timeout=frame_delay)
-            self.log('fps_throttle released')
             self.fps_throttle.clear()
             self.take_picture()
 
