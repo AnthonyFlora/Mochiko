@@ -36,8 +36,10 @@ class SurveillanceService(Service.Service):
         self.client.publish(self.topic_sensor_status, json.dumps(self.config))
 
     def processing_loop(self):
+        self.log('processing loop started..')
         while True:
             while not self.fps_throttle.wait(timeout=None):
+                self.log('fps_throttle released')
                 self.fps_throttle.clear()
                 self.take_picture()
 
