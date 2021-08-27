@@ -38,7 +38,10 @@ class SurveillanceService(Service.Service):
     def processing_loop(self):
         self.log('processing loop started..')
         while True:
-            self.fps_throttle.wait(timeout=None)
+            frame_delay = None
+            if self.config['fps'] > 0:
+                frame_delay = 1.0 / self.config['fps']
+            self.fps_throttle.wait(timeout=frame_delay)
             self.log('fps_throttle released')
             self.fps_throttle.clear()
             self.take_picture()
