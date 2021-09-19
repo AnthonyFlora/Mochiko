@@ -22,6 +22,7 @@ class SurveillanceService(Service.Service):
         self.config['fps'] = 12
         self.config['res_x'] = 320
         self.config['res_y'] = 240
+        self.is_reconfig_needed = False
         self.camera = picamera.PiCamera()
         self.camera.framerate = self.config['fps']
         self.camera.resolution = (self.config['res_x'], self.config['res_y'])
@@ -46,6 +47,9 @@ class SurveillanceService(Service.Service):
                 stream.seek(0)
                 stream.truncate()
                 self.log('frame sent.. %d' % size)
+                if self.is_reconfig_needed:
+                    self.is_reconfig_needed = False
+                    break
 
     def on_config(self, client, userdata, message):
         self.log('on_config -- ' + message.topic + ' : ' + str(message.payload))
@@ -59,6 +63,7 @@ class SurveillanceService(Service.Service):
             self.log('config[%s] = %s' % (key, value))
         self.camera.framerate = self.config['fps']
         self.camera.resolution = (self.config['res_x'], self.config['res_y'])
+        self.is_reconfig_needed = True
 
     def take_picture(self):
         self.log('Taking picture')
