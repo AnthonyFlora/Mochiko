@@ -20,10 +20,11 @@ class SurveillanceService(Service.Service):
         self.topic_sensor_stream = 'surveillance/%s/stream' % self.hostname
         self.config = defaultdict(lambda: None)
         self.config['fps'] = 0
-        self.config['res_x'] = 640
-        self.config['res_y'] = 480
+        self.config['res_x'] = 320 #640
+        self.config['res_y'] = 240 #480
         self.camera = picamera.PiCamera()
-        self.camera.resolution = (640, 480)
+        self.camera.framerate = 24
+        self.camera.resolution = (self.config['res_x'], self.config['res_y'])
         self.frame_buffer = io.BytesIO()
         self.fps_throttle = threading.Event();
 
@@ -38,13 +39,24 @@ class SurveillanceService(Service.Service):
     def processing_loop(self):
         self.log('processing loop started..')
         while True:
-            frame_delay = None
-            time_to_take_last_picture = 0
-            if self.config['fps'] > 0:
-                frame_delay = max(0.0, 1.0 / self.config['fps'] - time_to_take_last_picture)
-            self.fps_throttle.wait(timeout=frame_delay)
-            self.fps_throttle.clear()
-            self.take_picture()
+            # -- STREAM
+            stream = io.BytesIO()
+            for foo in self.camera.capture_continuous(stream, 'jpeg', use_video_port=True):
+                size = stream.tell()
+                stream.seek(0)
+                self.client.publish(self.topic_sensor_stream, stream.read())
+                stream.seek(0)
+                stream.truncate()
+                self.log('frame sent.. %d' % size)
+
+            # -- SNAPSHOT
+            #frame_delay = None
+            #time_to_take_last_picture = 0
+            #if self.config['fps'] > 0:
+            #    frame_delay = max(0.0, 1.0 / self.config['fps'] - time_to_take_last_picture)
+            #self.fps_throttle.wait(timeout=frame_delay)
+            #self.fps_throttle.clear()
+            #self.take_picture()
 
     def on_config(self, client, userdata, message):
         self.log('on_config -- ' + message.topic + ' : ' + str(message.payload))
