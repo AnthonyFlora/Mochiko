@@ -26,7 +26,6 @@ class SurveillanceService(Service.Service):
         self.camera.framerate = self.config['fps']
         self.camera.resolution = (self.config['res_x'], self.config['res_y'])
         self.frame_buffer = io.BytesIO()
-        self.fps_throttle = threading.Event();
 
     def on_connect(self, client, userdata, flags, rc):
         self.log('Connected')
@@ -39,7 +38,6 @@ class SurveillanceService(Service.Service):
     def processing_loop(self):
         self.log('processing loop started..')
         while True:
-            # -- STREAM
             stream = io.BytesIO()
             for foo in self.camera.capture_continuous(stream, 'jpeg', use_video_port=True):
                 size = stream.tell()
@@ -48,15 +46,6 @@ class SurveillanceService(Service.Service):
                 stream.seek(0)
                 stream.truncate()
                 self.log('frame sent.. %d' % size)
-
-            # -- SNAPSHOT
-            #frame_delay = None
-            #time_to_take_last_picture = 0
-            #if self.config['fps'] > 0:
-            #    frame_delay = max(0.0, 1.0 / self.config['fps'] - time_to_take_last_picture)
-            #self.fps_throttle.wait(timeout=frame_delay)
-            #self.fps_throttle.clear()
-            #self.take_picture()
 
     def on_config(self, client, userdata, message):
         self.log('on_config -- ' + message.topic + ' : ' + str(message.payload))
@@ -68,7 +57,8 @@ class SurveillanceService(Service.Service):
             None
         for key, value in self.config.items():
             self.log('config[%s] = %s' % (key, value))
-        self.fps_throttle.set()
+        self.camera.framerate = self.config['fps']
+        self.camera.resolution = (self.config['res_x'], self.config['res_y'])
 
     def take_picture(self):
         self.log('Taking picture')
