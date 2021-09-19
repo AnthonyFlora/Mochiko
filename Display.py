@@ -4,10 +4,11 @@ import signal
 import queue
 import sys
 import time
+import paho.mqtt.client as mqtt
 import tkinter as tk
 from io import BytesIO
 from PIL import ImageTk, Image, ImageFont, ImageDraw
-
+import Config
 
 # -----------------------------------------------------------------------------
 
@@ -22,10 +23,9 @@ class View(tk.Tk):
     #self.img = Image.open('test.jpeg')
     self.img_tk = ImageTk.PhotoImage(self.img)
     self.img_canvas = self.canvas.create_image(20, 20, anchor=tk.NW, image=self.img_tk)
-    self.update()
 
-  def update(self):
-    self.img = Image.open('test.jpeg')
+  def update(self, img):
+    self.img = img
 
     font = ImageFont.load_default() #ImageFont.truetype('Arial.ttf', 16)
     draw = ImageDraw.Draw(self.img)
@@ -33,7 +33,7 @@ class View(tk.Tk):
 
     self.img_tk = ImageTk.PhotoImage(self.img)
     self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
-    self.after(1, self.update)
+    print('gui updated')
 
   def timestamp(self):
     return str(datetime.datetime.fromtimestamp(time.time()))
@@ -50,29 +50,48 @@ class View(tk.Tk):
 
 class Control:
 
-  def __init__(self):
-    None
+  def __init__(self, view):
+    self.view = view
 
-  def on_connect(self):
-    None
+  def connect_to_broker(self):
+    self.client = mqtt.Client()
+    self.client.on_connect = self.on_connect
+    self.client.on_disconnect = self.on_disconnect
+    self.client.username_pw_set(username=Config.MQTT_BROKER_USER, password=Config.MQTT_BROKER_PASS)
+    self.client.connect(Config.MQTT_BROKER_ADDR, Config.MQTT_BROKER_PORT)
 
-  def on_disconnect(self):
-    None
+  def setup_subscriptions(self):
+    self.client.subscribe('surveillance/moocow/stream')
+    self.client.message_callback_add('surveillance/moocow/stream', self.on_stream)
 
-  def on_message(self):
+  def on_connect(self, client, userdata, flags, rc):
+    print('Control connected..')
+
+  def on_disconnect(self, client, userdata, rc):
+    print('Control disconnected..')
+
+  def on_stream(self, client, userdata, msg):
+    print('Control received stream framei @ %s' % msg.topic)
+    #stream = BytesIO(msg.payload)
+    #img = Image.open(stream)
+    #self.view.update(img)
+
+  def on_message(self, client, userdata, msg):
     None
 
   def start(self):
-    None
+    self.connect_to_broker()
+    self.setup_subscriptions()
+    self.client.loop_start()
 
   def stop(self):
-    None
+    self.client.loop_stop()
 
 
 # -----------------------------------------------------------------------------
 
 view = View()
-control = Control()
+control = Control(view)
 
 signal.signal(signal.SIGINT, view.on_sigint)
 
