@@ -72,9 +72,9 @@ class Control:
 
   def on_stream(self, client, userdata, msg):
     print('Control received stream framei @ %s' % msg.topic)
-    #stream = BytesIO(msg.payload)
-    #img = Image.open(stream)
-    #self.view.update(img)
+    stream = BytesIO(msg.payload)
+    img = Image.open(stream)
+    self.view.update(img)
 
   def on_message(self, client, userdata, msg):
     None
