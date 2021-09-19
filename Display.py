@@ -20,19 +20,19 @@ class View(tk.Tk):
     self.canvas = tk.Canvas(width=640, height=480)
     self.canvas.pack() 
     self.img = Image.new('RGB', (640, 480), (0, 0, 0))
-    #self.img = Image.open('test.jpeg')
     self.img_tk = ImageTk.PhotoImage(self.img)
     self.img_canvas = self.canvas.create_image(20, 20, anchor=tk.NW, image=self.img_tk)
 
   def update(self, img):
     self.img = img
 
-    font = ImageFont.load_default() #ImageFont.truetype('Arial.ttf', 16)
+    font = ImageFont.load_default()
     draw = ImageDraw.Draw(self.img)
     draw.text((0, 0), self.timestamp(), (255, 255, 255), font=font)
 
     self.img_tk = ImageTk.PhotoImage(self.img)
     self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
+    self.update_idletasks()
     print('gui updated')
 
   def timestamp(self):
