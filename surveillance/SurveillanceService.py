@@ -19,9 +19,10 @@ class SurveillanceService(Service.Service):
         self.topic_sensor_status = 'surveillance/%s/status' % self.hostname
         self.topic_sensor_stream = 'surveillance/%s/stream' % self.hostname
         self.config = defaultdict(lambda: None)
-        self.config['fps'] = .1
+        self.config['fps'] = 1
         self.config['res_x'] = 320
         self.config['res_y'] = 240
+        self.config['delay'] = 0.0
         self.is_reconfig_needed = False
         self.camera = picamera.PiCamera()
         self.camera.framerate = self.config['fps']
@@ -53,6 +54,8 @@ class SurveillanceService(Service.Service):
                 if self.is_reconfig_needed:
                     self.is_reconfig_needed = False
                     break
+                time.sleep(self.config['delay'])
+                    
 
     def on_config(self, client, userdata, message):
         self.log('on_config -- ' + message.topic + ' : ' + str(message.payload))
