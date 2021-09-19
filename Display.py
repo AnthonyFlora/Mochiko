@@ -52,6 +52,7 @@ class Control:
 
   def __init__(self, view):
     self.view = view
+    self.stream = BytesIO()
 
   def connect_to_broker(self):
     self.client = mqtt.Client()
@@ -72,9 +73,11 @@ class Control:
 
   def on_stream(self, client, userdata, msg):
     print('Control received stream framei @ %s' % msg.topic)
-    stream = BytesIO(msg.payload)
-    img = Image.open(stream)
+    self.stream.write(msg.payload)
+    img = Image.open(self.stream)
     self.view.update(img)
+    self.stream.seek(0)
+    self.stream.truncate()
 
   def on_message(self, client, userdata, msg):
     None
