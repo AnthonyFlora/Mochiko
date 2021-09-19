@@ -20,8 +20,8 @@ class SurveillanceService(Service.Service):
         self.topic_sensor_stream = 'surveillance/%s/stream' % self.hostname
         self.config = defaultdict(lambda: None)
         self.config['fps'] = 12
-        self.config['res_x'] = 640
-        self.config['res_y'] = 480
+        self.config['res_x'] = 320
+        self.config['res_y'] = 240
         self.camera = picamera.PiCamera()
         self.camera.framerate = self.config['fps']
         self.camera.resolution = (self.config['res_x'], self.config['res_y'])
