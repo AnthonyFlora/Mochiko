@@ -33,13 +33,15 @@ class SurveillanceService(Service.Service):
         self.client.subscribe(self.topic_sensor_config)
         self.client.message_callback_add(self.topic_global_config, self.on_config)
         self.client.message_callback_add(self.topic_sensor_config, self.on_config)
-        self.client.publish(self.topic_sensor_status, json.dumps(self.config))
 
     def processing_loop(self):
         self.log('processing loop started..')
         while True:
+            # Handle reconfig
+            self.client.publish(self.topic_sensor_status, json.dumps(self.config))
             self.camera.framerate = self.config['fps']
             self.camera.resolution = (self.config['res_x'], self.config['res_y'])
+            # Send sensor data
             stream = io.BytesIO()
             for foo in self.camera.capture_continuous(stream, 'jpeg', use_video_port=True):
                 size = stream.tell()
