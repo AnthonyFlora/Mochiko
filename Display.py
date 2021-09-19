@@ -27,7 +27,7 @@ class View(tk.Tk):
   def update(self):
     self.img = Image.open('test.jpeg')
 
-    font = ImageFont.truetype('Arial.ttf', 16)
+    font = ImageFont.load_default() #ImageFont.truetype('Arial.ttf', 16)
     draw = ImageDraw.Draw(self.img)
     draw.text((0, 0), self.timestamp(), (255, 255, 255), font=font)
 
