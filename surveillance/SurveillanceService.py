@@ -26,7 +26,6 @@ class SurveillanceService(Service.Service):
         self.camera = picamera.PiCamera()
         self.camera.framerate = self.config['fps']
         self.camera.resolution = (self.config['res_x'], self.config['res_y'])
-        self.frame_buffer = io.BytesIO()
 
     def on_connect(self, client, userdata, flags, rc):
         self.log('Connected')
@@ -39,6 +38,8 @@ class SurveillanceService(Service.Service):
     def processing_loop(self):
         self.log('processing loop started..')
         while True:
+            self.camera.framerate = self.config['fps']
+            self.camera.resolution = (self.config['res_x'], self.config['res_y'])
             stream = io.BytesIO()
             for foo in self.camera.capture_continuous(stream, 'jpeg', use_video_port=True):
                 size = stream.tell()
@@ -61,16 +62,7 @@ class SurveillanceService(Service.Service):
             None
         for key, value in self.config.items():
             self.log('config[%s] = %s' % (key, value))
-        self.camera.framerate = self.config['fps']
-        self.camera.resolution = (self.config['res_x'], self.config['res_y'])
         self.is_reconfig_needed = True
-
-    def take_picture(self):
-        self.log('Taking picture')
-        self.frame_buffer.seek(0)
-        self.camera.capture(self.frame_buffer, 'jpeg')
-        self.frame_buffer.seek(0)
-        self.client.publish(self.topic_sensor_stream, self.frame_buffer.read())
 
 
 # -- Main ---------------------------------------------------------------------
