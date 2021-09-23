@@ -22,18 +22,25 @@ class View(tk.Tk):
     self.img = Image.new('RGB', (640, 480), (0, 0, 0))
     self.img_tk = ImageTk.PhotoImage(self.img)
     self.img_canvas = self.canvas.create_image(20, 20, anchor=tk.NW, image=self.img_tk)
+    self.img_queue = queue.Queue()
+    self.update_image()
 
-  def update(self, img):
-    self.img = img
-
+  def queue_image(self, img):
+    # Draw overlay
     font = ImageFont.load_default()
-    draw = ImageDraw.Draw(self.img)
+    draw = ImageDraw.Draw(img)
     draw.text((0, 0), self.timestamp(), (255, 255, 255), font=font)
+    # Change type, queue
+    img_tk = ImageTk.PhotoImage(img)
+    self.img_queue.put(img_tk)
 
-    self.img_tk = ImageTk.PhotoImage(self.img)
-    self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
-    self.update_idletasks()
-    print('gui updated')
+  def update_image(self):
+    if not self.img_queue.empty():
+      self.img_tk = self.img_queue.get()
+      self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
+      self.update()
+      self.update_idletasks()
+    self.after(10, self.update_image)
 
   def timestamp(self):
     return str(datetime.datetime.fromtimestamp(time.time()))
@@ -75,7 +82,7 @@ class Control:
     print('Control received stream framei @ %s' % msg.topic)
     self.stream.write(msg.payload)
     img = Image.open(self.stream)
-    self.view.update(img)
+    self.view.queue_image(img)
     self.stream.seek(0)
     self.stream.truncate()
 

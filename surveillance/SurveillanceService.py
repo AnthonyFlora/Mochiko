@@ -23,10 +23,9 @@ class SurveillanceService(Service.Service):
         self.config['res_x'] = 320
         self.config['res_y'] = 240
         self.config['delay'] = 0.0
+        self.config['rotatation'] = 0
         self.is_reconfig_needed = False
         self.camera = picamera.PiCamera()
-        self.camera.framerate = self.config['fps']
-        self.camera.resolution = (self.config['res_x'], self.config['res_y'])
 
     def on_connect(self, client, userdata, flags, rc):
         self.log('Connected')
@@ -42,6 +41,7 @@ class SurveillanceService(Service.Service):
             self.client.publish(self.topic_sensor_status, json.dumps(self.config))
             self.camera.framerate = self.config['fps']
             self.camera.resolution = (self.config['res_x'], self.config['res_y'])
+            self.camera.rotation = self.config['rotation']
             # Send sensor data
             stream = io.BytesIO()
             for foo in self.camera.capture_continuous(stream, 'jpeg', use_video_port=True):
