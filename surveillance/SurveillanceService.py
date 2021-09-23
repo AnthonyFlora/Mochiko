@@ -23,7 +23,7 @@ class SurveillanceService(Service.Service):
         self.config['res_x'] = 320
         self.config['res_y'] = 240
         self.config['delay'] = 0.0
-        self.config['rotatation'] = 0
+        self.config['rotation'] = 0
         self.is_reconfig_needed = False
         self.camera = picamera.PiCamera()
 
