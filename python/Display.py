@@ -67,6 +67,7 @@ class Control:
     self.client.on_disconnect = self.on_disconnect
     self.client.username_pw_set(username=Config.MQTT_BROKER_USER, password=Config.MQTT_BROKER_PASS)
     self.client.connect(Config.MQTT_BROKER_ADDR, Config.MQTT_BROKER_PORT)
+    self.time_last_message = time.time()
 
   def setup_subscriptions(self):
     self.client.subscribe('surveillance/moocow/stream')
@@ -79,7 +80,8 @@ class Control:
     print('Control disconnected..')
 
   def on_stream(self, client, userdata, msg):
-    print('Control received stream framei @ %s' % msg.topic)
+    print('Control received stream frame @ %s, fps=%0.2f' % (msg.topic, 1.0 / self.time_last_message))
+    self.time_last_message = time.time()
     self.stream.write(msg.payload)
     img = Image.open(self.stream)
     self.view.queue_image(img)
