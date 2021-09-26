@@ -79,7 +79,7 @@ class Control:
     print('Control disconnected..')
 
   def on_stream(self, client, userdata, msg):
-    print('Control received stream framei @ %s' % msg.topic)
+    print('Control received stream frame @ %s, fps=%0.2' % msg.topic)
     self.stream.write(msg.payload)
     img = Image.open(self.stream)
     self.view.queue_image(img)
