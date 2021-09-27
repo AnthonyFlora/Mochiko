@@ -33,15 +33,16 @@ class View(tk.Tk):
     # Change type, queue
     self.img_tk = ImageTk.PhotoImage(img)
     #self.img_queue.put(img_tk)
-
+    self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
+      
   def update_image(self):
-    if self.img_tk:
+    #if True:
     #if not self.img_queue.empty():
       #self.img_tk = self.img_queue.get()
-      self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
-      self.update()
-      self.update_idletasks()
-      self.img_tk = None
+      #self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
+      #self.update()
+      #self.update_idletasks()
+      #self.img_tk = None
     self.after(10, self.update_image)
 
   def timestamp(self):
