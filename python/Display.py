@@ -41,7 +41,7 @@ class View(tk.Tk):
       self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
       self.update()
       self.update_idletasks()
-    self.after(100, self.update_image)
+    self.after(10, self.update_image)
 
   def timestamp(self):
     return str(datetime.datetime.fromtimestamp(time.time()))
