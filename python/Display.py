@@ -31,12 +31,12 @@ class View(tk.Tk):
     draw = ImageDraw.Draw(img)
     draw.text((0, 0), self.timestamp(), (255, 255, 255), font=font)
     # Change type, queue
-    img_tk = ImageTk.PhotoImage(img)
-    self.img_queue.put(img_tk)
+    self.img_tk = ImageTk.PhotoImage(img)
+    #self.img_queue.put(img_tk)
 
   def update_image(self):
     if not self.img_queue.empty():
-      self.img_tk = self.img_queue.get()
+      #self.img_tk = self.img_queue.get()
       self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
       self.update()
       self.update_idletasks()
