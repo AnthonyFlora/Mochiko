@@ -31,15 +31,18 @@ class View(tk.Tk):
     draw = ImageDraw.Draw(img)
     draw.text((0, 0), self.timestamp(), (255, 255, 255), font=font)
     # Change type, queue
-    img_tk = ImageTk.PhotoImage(img)
-    self.img_queue.put(img_tk)
-
+    self.img_tk = ImageTk.PhotoImage(img)
+    #self.img_queue.put(img_tk)
+    self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
+      
   def update_image(self):
-    if not self.img_queue.empty():
-      self.img_tk = self.img_queue.get()
-      self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
-      self.update()
-      self.update_idletasks()
+    #if True:
+    #if not self.img_queue.empty():
+      #self.img_tk = self.img_queue.get()
+      #self.canvas.itemconfig(self.img_canvas, image=self.img_tk)
+      #self.update()
+      #self.update_idletasks()
+      #self.img_tk = None
     self.after(10, self.update_image)
 
   def timestamp(self):
@@ -80,8 +83,10 @@ class Control:
     print('Control disconnected..')
 
   def on_stream(self, client, userdata, msg):
-    print('Control received stream frame @ %s, fps=%0.2f' % (msg.topic, 1.0 / self.time_last_message))
-    self.time_last_message = time.time()
+    time_now = time.time()
+    self.time_since_last_message = self.time_last_message - time_now
+    self.time_last_message = time_now
+    print('Control received stream frame @ %s, fps=%0.2f' % (msg.topic, 1.0 / self.time_since_last_message))
     self.stream.write(msg.payload)
     img = Image.open(self.stream)
     self.view.queue_image(img)
