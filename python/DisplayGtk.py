@@ -23,7 +23,7 @@ class Display(Gtk.Window):
 
     def set_image(self, pixbuf):
         self.image.set_from_pixbuf(pixbuf)
-        print('Image changed')
+        self.image.queue_draw()
 
 # -----------------------------------------------------------------------------
 
