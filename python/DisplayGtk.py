@@ -6,7 +6,7 @@ import gi
 import datetime
 import time
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf, GLib
 from threading import Thread
 
 # -----------------------------------------------------------------------------
@@ -34,8 +34,8 @@ class Display(Gtk.Window):
         time_curr = time.time()
         time_diff = time_curr - self.time_last_image_update
         self.time_last_image_update = time.time()
-        self.image.set_from_pixbuf(pixbuf)
-        self.label.set_text('%s (%0.2f FPS)' % (datetime.datetime.now(), 1 / time_diff))
+        GLib.idle_add(self.image.set_from_pixbuf, pixbuf)
+        GLib.idle_add(self.label.set_text, '%s (%0.2f FPS)' % (datetime.datetime.now(), 1 / time_diff))
 
 # -----------------------------------------------------------------------------
 
