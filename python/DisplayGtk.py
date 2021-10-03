@@ -23,7 +23,6 @@ class Display(Gtk.Window):
 
     def set_image(self, pixbuf):
         self.image.set_from_pixbuf(pixbuf)
-        self.image.queue_draw()
 
 # -----------------------------------------------------------------------------
 
@@ -51,7 +50,6 @@ class MqttAdapter(Thread):
         print('Control disconnected..')
 
     def on_stream(self, client, userdata, msg):
-        print('Control received stream frame @ %s' % msg.topic)
         if self.display is not None:
             loader = GdkPixbuf.PixbufLoader()
             loader.write(msg.payload)
