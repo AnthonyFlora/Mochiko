@@ -3,6 +3,8 @@
 import Config
 import paho.mqtt.client as mqtt
 import gi
+import datetime
+import time
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GdkPixbuf
 from threading import Thread
@@ -15,14 +17,25 @@ class Display(Gtk.Window):
     def __init__(self):
         super(Display, self).__init__()
         self.set_title('Display')
-        self.set_size_request(320, 240)
+        self.set_size_request(320, 250)
+        self.set_resizable(False)
+        self.time_last_image_update = time.time()
+
         self.image = Gtk.Image()
-        self.add(self.image)
+        self.label = Gtk.Label()
+        self.fix = Gtk.Fixed()
+        self.fix.put(self.image, 0, 0)
+        self.fix.put(self.label, 0, 240)
+        self.add(self.fix)
         self.connect('destroy', Gtk.main_quit)
         self.show_all()
 
     def set_image(self, pixbuf):
+        time_curr = time.time()
+        time_diff = time_curr - self.time_last_image_update
+        self.time_last_image_update = time.time()
         self.image.set_from_pixbuf(pixbuf)
+        self.label.set_text('Last Update: %s (%0.2f FPS)' % (datetime.datetime.now(), 1 / time_diff))
 
 # -----------------------------------------------------------------------------
 
