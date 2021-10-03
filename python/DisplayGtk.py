@@ -35,7 +35,7 @@ class Display(Gtk.Window):
         time_diff = time_curr - self.time_last_image_update
         self.time_last_image_update = time.time()
         self.image.set_from_pixbuf(pixbuf)
-        self.label.set_text('Last Update: %s (%0.2f FPS)' % (datetime.datetime.now(), 1 / time_diff))
+        self.label.set_text('%s (%0.2f FPS)' % (datetime.datetime.now(), 1 / time_diff))
 
 # -----------------------------------------------------------------------------
 
