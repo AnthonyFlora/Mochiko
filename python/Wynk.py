@@ -105,6 +105,7 @@ class Wynk(Gtk.Window):
             cr.stroke()
 
         def _on_draw(self, area, cr):
+            print(self.name, ' draw')
             time_draw_beg = time.time()
             self._update_actual_fps()
             self.render(cr)
