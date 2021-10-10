@@ -71,7 +71,6 @@ class Wynk(Gtk.Window):
             self.set_image_from_pixbuf(pixbuf)
 
         def _schedule_next_tick(self):
-            print(self.name, ' tick')
             if self.requested_fps is not None:
                 delay = round((1 / self.requested_fps - self.estimated_draw_time) * 1000)
                 GLib.timeout_add(delay, self._tick)
@@ -105,7 +104,6 @@ class Wynk(Gtk.Window):
             cr.stroke()
 
         def _on_draw(self, area, cr):
-            print(self.name, ' draw')
             time_draw_beg = time.time()
             self._update_actual_fps()
             self.render(cr)
