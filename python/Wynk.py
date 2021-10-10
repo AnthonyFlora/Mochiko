@@ -4,7 +4,6 @@
 #
 #
 
-
 # -- Imports ------------------------------------------------------------------
 
 import cairo
@@ -54,7 +53,7 @@ class Wynk(Gtk.Window):
             self.estimated_draw_time = 0
             self._schedule_next_tick()
 
-        def set_image(self, pixbuf):
+        def set_image_from_pixbuf(self, pixbuf):
             is_width_match = (pixbuf.get_width() == self.image_width)
             is_height_match = (pixbuf.get_height() == self.image_height)
             is_dimension_match = is_width_match and is_height_match
@@ -63,6 +62,13 @@ class Wynk(Gtk.Window):
                 print(self.name, ' scaling (%d %d) to (%d %d)' % (pixbuf.get_width(), pixbuf.get_height(), self.image_width, self.image_height))
                 self.scaled_pixbuf = pixbuf.scale_simple(self.image_width, self.image_height, GdkPixbuf.InterpType.BILINEAR)
             self._tick()
+
+        def set_image_from_jpeg(self, jpeg):
+            loader = GdkPixbuf.PixbufLoader()
+            loader.write(jpeg)
+            loader.close()
+            pixbuf = loader.get_pixbuf()
+            self.set_image_from_pixbuf(pixbuf)
 
         def _schedule_next_tick(self):
             print(self.name, ' tick')
@@ -110,17 +116,18 @@ class Wynk(Gtk.Window):
             self._draw_timestamp(cr)
 
 
-
 # -- Example ------------------------------------------------------------------
 
-pixbuf = GdkPixbuf.Pixbuf.new_from_file('test.jpeg')
+if __name__ == '__main__':
 
-image1 = Wynk.Image(name='Image1', requested_fps=1)
-image1.set_image(pixbuf)
-image2 = Wynk.Image(name='Image2')
-image2.set_image(pixbuf)
+    pixbuf = GdkPixbuf.Pixbuf.new_from_file('test.jpeg')
 
-wynk = Wynk(320, 2*240)
-wynk.add_widget(image1, 0, 0)
-wynk.add_widget(image2, 0, 240)
-wynk.start()
+    image1 = Wynk.Image(name='Image1', requested_fps=1)
+    image1.set_image_from_pixbuf(pixbuf)
+    image2 = Wynk.Image(name='Image2')
+    image2.set_image_from_pixbuf(pixbuf)
+
+    wynk = Wynk(320, 2*240)
+    wynk.add_widget(image1, 0, 0)
+    wynk.add_widget(image2, 0, 240)
+    wynk.start()
