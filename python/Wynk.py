@@ -77,7 +77,7 @@ class Wynk(Gtk.Window):
                 GLib.timeout_add(delay, self._tick)
 
         def _tick(self):
-            self.queue_draw()
+            GLib.idle_add(self.queue_draw)
             self._schedule_next_tick()
             return False
 
